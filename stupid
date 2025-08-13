@@ -56,7 +56,7 @@ local ScoreExploitToggle = Main:CreateToggle({
 warn("no")
 local args = {
 	999,
-	"AAAAAAAAAAAAAAAAAAAAAAAAA",
+	"Dump",
 	false,
 	"Default",
 	3,
