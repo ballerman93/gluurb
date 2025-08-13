@@ -50,13 +50,13 @@ local ScoreExploitToggle = Main:CreateToggle({
    Callback = function(Value)
  IsScoreExploiting = Value
         while task.wait() do
-          if IsScoreExploiting and game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.SelectedSongServ.Value == "Raining Tacos" then
+          if IsScoreExploiting and game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.SelectedSongServ.Value == "Dump" then
               
 
 warn("no")
 local args = {
 	999,
-	"Raining Tacos",
+	"AAAAAAAAAAAAAAAAAAAAAAAAA",
 	false,
 	"Default",
 	3,
