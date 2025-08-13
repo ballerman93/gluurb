@@ -9,7 +9,7 @@ button.Position = UDim2.new(0.5, -75, 0.5, -30)
 button.BackgroundColor3 = Color3.fromRGB(139, 69, 19)
 button.BorderSizePixel = 5
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.Text = "Toggle Poo"
+button.Text = "POO"
 button.TextScaled = true
 button.Parent = screenGui
 button.Active = true
@@ -44,5 +44,5 @@ end)
 
 button.MouseButton1Click:Connect(function()
     toggle = not toggle
-    button.Text = toggle and "Poo ON" or "Poo OFF"
+    button.Text = toggle and "poo on" or "poo off"
 end)
