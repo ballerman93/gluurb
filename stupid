@@ -50,7 +50,7 @@ local ScoreExploitToggle = Main:CreateToggle({
    Callback = function(Value)
  IsScoreExploiting = Value
         while task.wait() do
-          if IsScoreExploiting and game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.SelectedSongServ.Value == "Black Knife X" then
+          if IsScoreExploiting and game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.SelectedSongServ.Value == "Dump" then
               
 
 warn("no")
