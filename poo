@@ -1,0 +1,48 @@
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "PooGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 150, 0, 60)
+button.Position = UDim2.new(0.5, -75, 0.5, -30)
+button.BackgroundColor3 = Color3.fromRGB(139, 69, 19)
+button.BorderSizePixel = 5
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Text = "Toggle Poo"
+button.TextScaled = true
+button.Parent = screenGui
+button.Active = true
+button.Draggable = true
+
+local toggle = false
+local player = game:GetService("Players").LocalPlayer
+
+local function lmaowhatthefuck(parent)
+    for _, obj in pairs(parent:GetDescendants()) do
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            obj.Text = "poo"
+        elseif obj:IsA("StringValue") then
+            obj.Value = "poo"
+        end
+    end
+end
+
+spawn(function()
+    while true do
+        wait(1) -- prepare for fuckass lagspikes
+        if toggle then
+            for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+                if p:FindFirstChild("PlayerGui") then
+                    lmaowhatthefuck(p.PlayerGui)
+                end
+            end
+            lmaowhatthefuck(game)
+        end
+    end
+end)
+
+button.MouseButton1Click:Connect(function()
+    toggle = not toggle
+    button.Text = toggle and "Poo ON" or "Poo OFF"
+end)
