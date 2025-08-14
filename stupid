@@ -2,7 +2,7 @@ repeat task.wait() until game:IsLoaded()
 task.wait(0.3)
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
-   Name = "AAA",
+   Name = "Trick Hub",
    Icon = 0, 
    LoadingTitle = "Trick Hub",
    LoadingSubtitle = "",
@@ -73,13 +73,13 @@ end
         end
    end,
 })
-local ScoreExploit = Main:CreateLabel("eat poop", "info")
-local Notice = Main:CreateLabel("eat poop", "octagon-alert")
+local ScoreExploit = Main:CreateLabel("Select the song Black Knife X, and run an Autoclicker on the play button. I'm way too lazy to integrate that myself", "info")
+local Notice = Main:CreateLabel("Staff said that this is externally detected (You will most likely get banned for doing this)", "octagon-alert")
 
 local IHateSettingLimits = Main:CreateSection("Custom Settings")
 local ScoreExploit = Main:CreateLabel('This avoids blockages like "Note Speed Atleast 0.5"', "info")
 local NoteSpeedChanger = Main:CreateSlider({
-   Name = "Custom Note Speed",
+   Name = "E",
    Range = {0, 5},
    Increment = 0.1,
    Suffix = "",
