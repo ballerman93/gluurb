@@ -1,5 +1,5 @@
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "PooGUI"
+screenGui.Name = "POO"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
