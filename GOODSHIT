@@ -85,7 +85,7 @@ button.Draggable = true
 button.Parent = screenGui
 
 local function die()
-    button.Text = "Power: "..tweakPower.." Mode: "..mode.." Keep Original Pos: "..tostring(keepOriginal).." CoreGui Included: "..tostring(includeCoreGui)
+    button.Text = "Power: "..tweakPower.." Mode: "..mode.." Original Pos: "..tostring(keepOriginal).." CoreGui Included: "..tostring(includeCoreGui)
     local r = tweakPower/10
     local g = keepOriginal and 0.8 or 0.3
     local b = mode/4
