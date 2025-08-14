@@ -1,0 +1,90 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local originalProps = {}
+local toggled = false
+local runLoop
+local tweakPower = 1
+
+local function storeOriginal(element)
+    if element:IsA("GuiObject") and not originalProps[element] then
+        originalProps[element] = {
+            Position = element.Position,
+            Size = element.Size,
+            Rotation = element.Rotation
+        }
+    end
+    for _, child in pairs(element:GetChildren()) do
+        storeOriginal(child)
+    end
+end
+
+local function restoreElement(element)
+    if element:IsA("GuiObject") then
+        local original = originalProps[element]
+        if original then
+            element.Position = original.Position
+            element.Size = original.Size
+            element.Rotation = original.Rotation
+        end
+    end
+end
+
+local function tweakElement(element)
+    if element:IsA("GuiObject") then
+        local original = originalProps[element]
+        if original then
+            local offsetX = math.random(-tweakPower, tweakPower)
+            local offsetY = math.random(-tweakPower, tweakPower)
+            local sizeX = math.random(-tweakPower, tweakPower)
+            local sizeY = math.random(-tweakPower, tweakPower)
+            local rotationOffset = math.random(-tweakPower*3, tweakPower*3)
+            element.Position = original.Position + UDim2.new(0, offsetX, 0, offsetY)
+            element.Size = original.Size + UDim2.new(0, sizeX, 0, sizeY)
+            element.Rotation = original.Rotation + rotationOffset
+        end
+    end
+end
+
+storeOriginal(playerGui)
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = playerGui
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 200, 0, 70)
+button.Position = UDim2.new(0.5, -100, 0.5, -35)
+button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+button.BorderColor3 = Color3.fromRGB(0, 0, 0)
+button.BorderSizePixel = 5
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.TextScaled = true
+button.Text = "Power: " .. tweakPower
+button.Active = true
+button.Draggable = true
+button.Parent = screenGui
+
+button.MouseButton1Click:Connect(function()
+    tweakPower = tweakPower + 1
+    if tweakPower > 10 then
+        tweakPower = 0
+    end
+    button.Text = "Power: " .. tweakPower
+    if tweakPower > 0 and not toggled then
+        toggled = true
+        runLoop = true
+        spawn(function()
+            while runLoop do
+                for element, _ in pairs(originalProps) do
+                    tweakElement(element)
+                end
+                wait(0.05)
+            end
+        end)
+    elseif tweakPower == 0 then
+        toggled = false
+        runLoop = false
+        for element, _ in pairs(originalProps) do
+            restoreElement(element)
+        end
+    end
+end)
