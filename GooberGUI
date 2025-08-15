@@ -637,6 +637,7 @@ UIS.InputBegan:Connect(function(input, processed) -- why is this here
 	end
 end)
 
+print("hey guys its me flying gorilla from my new app on the app store flying gorilla\nits a free download so i hope you you check it out and and i hope-"
 --[[
 ⢿⣿⣿⣿⣭⠹⠛⠛⠛⢿⣿⣿⣿⣿⡿⣿⠷⠶⠿⢻⣿⣛⣦⣙⠻⣿
 ⣿⣿⢿⣿⠏⠀⠀⡀⠀⠈⣿⢛⣽⣜⠯⣽⠀⠀⠀⠀⠙⢿⣷⣻⡀⢿
