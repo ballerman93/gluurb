@@ -1,0 +1,651 @@
+--[[
+⢿⣿⣿⣿⣭⠹⠛⠛⠛⢿⣿⣿⣿⣿⡿⣿⠷⠶⠿⢻⣿⣛⣦⣙⠻⣿
+⣿⣿⢿⣿⠏⠀⠀⡀⠀⠈⣿⢛⣽⣜⠯⣽⠀⠀⠀⠀⠙⢿⣷⣻⡀⢿
+⠐⠛⢿⣾⣖⣤⡀⠀⢀⡰⠿⢷⣶⣿⡇⠻⣖⣒⣒⣶⣿⣿⡟⢙⣶⣮
+⣤⠀⠀⠛⠻⠗⠿⠿⣯⡆⣿⣛⣿⡿⠿⠮⡶⠼⠟⠙⠊⠁⠀⠸⢣⣿
+⣿⣷⡀⠀⠀⠀⠀⠠⠭⣍⡉⢩⣥⡤⠥⣤⡶⣒⠀⠀⠀⠀⠀⢰⣿⣿
+⣿⣿⡽⡄⠀⠀⠀⢿⣿⣆⣿⣧⢡⣾⣿⡇⣾⣿⡇⠀⠀⠀⠀⣿⡇⠃
+⣿⣿⣷⣻⣆⢄⠀⠈⠉⠉⠛⠛⠘⠛⠛⠛⠙⠛⠁⠀⠀⠀⠀⣿⡇⢸
+⢞⣿⣿⣷⣝⣷⣝⠦⡀⠀⠀⠀⠀⠀⠀⠀⡀⢀⠀⠀⠀⠀⠀⠛⣿⠈
+⣦⡑⠛⣟⢿⡿⣿⣷⣝⢧⡀⠀⠀⣶⣸⡇⣿⢸⣧⠀⠀⠀⠀⢸⡿⡆
+⣿⣿⣷⣮⣭⣍⡛⠻⢿⣷⠿⣶⣶⣬⣬⣁⣉⣀⣀⣁⡤⢴⣺⣾⣽⡇
+]]
+-- PREPARE YOURSELF FOR THE MOST UNOPTIMIZED UNCATEGORIZED UNREADABLE CODE OF ALL TIME -- and also garbagegpt bro help me add fucking images please how do you not even know with the searxch functionsosnosnohnosns
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local coreGui = game:GetService("CoreGui")
+local UIS = game:GetService("UserInputService")
+local TeleportService = game:GetService("TeleportService")
+local RS = game:GetService("ReplicatedStorage")
+local notifEvent = RS:WaitForChild("Events"):WaitForChild("ClientNOTIFv2") -- hreeagrhiuyfgeuyhiwfegrhujifgwrhjuirekjnhegnjh
+local youFrame = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("YOU")
+local idiotPos = youFrame.Position
+local settings = player:WaitForChild("Settings")
+local mobileFrame = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("Mobile")
+
+local originalProps = {}
+local toggled = true
+local tweakPower = 0
+local mode = 1
+local includeCoreGui = false
+local keepOriginal = true
+local tweakDelay = 0.05
+local goober = false
+local suddenDeath = false 
+local suddenDeathActive = false
+local guiVisible = false
+local changingBind = nil
+local gayMode = false
+local spinMode = false
+local fontCrazy = false
+local notesMemoryMode = false
+local memoryMode = false
+local circleMode = false
+local circleSpeed = 2
+local circleRadius = 20
+local mobileMode = false
+local beatMode = false -- crying rn
+local beatDistance = 100
+local beatSpeedOut = 0.05
+local beatSpeedBack = 0.2
+local beatKeys = {Enum.KeyCode.D, Enum.KeyCode.F, Enum.KeyCode.J, Enum.KeyCode.K}
+local changingBeatBind = nil
+local gooberKeys = {Enum.KeyCode.D, Enum.KeyCode.F, Enum.KeyCode.J, Enum.KeyCode.K}
+
+local function storeOriginal(element)
+	if element:IsA("GuiObject") and not originalProps[element] then
+		originalProps[element] = {
+			Position = element.Position,
+			Size = element.Size,
+			Rotation = element.Rotation,
+			BackgroundColor3 = element.BackgroundColor3,
+			TextColor3 = (element:IsA("TextLabel") or element:IsA("TextButton")) and element.TextColor3 or nil,
+			ImageColor3 = (element:IsA("ImageLabel") or element:IsA("ImageButton")) and element.ImageColor3 or nil
+		}
+	end
+	for _, child in ipairs(element:GetChildren()) do
+		storeOriginal(child)
+	end
+end
+
+local function restoreElement(element)
+	if element:IsA("GuiObject") then
+		local original = originalProps[element]
+		if original then
+			element.Position = original.Position
+			element.Size = original.Size
+			element.Rotation = original.Rotation
+			if original.BackgroundColor3 then
+				element.BackgroundColor3 = original.BackgroundColor3
+			end
+			if element:IsA("TextLabel") or element:IsA("TextButton") then
+				if original.TextColor3 then element.TextColor3 = original.TextColor3 end
+			end
+			if element:IsA("ImageLabel") or element:IsA("ImageButton") then
+				if original.ImageColor3 then element.ImageColor3 = original.ImageColor3 end
+			end
+		end
+	end
+end
+
+local function tweakElement(element)
+	local original = keepOriginal and originalProps[element] or {
+		Position = element.Position,
+		Size = element.Size,
+		Rotation = element.Rotation
+	}
+	if not original then return end
+	if mode == 1 then -- the the fucking the bro i forgot the fucking all thing 
+		local offsetX = math.random(-tweakPower, tweakPower)
+		local offsetY = math.random(-tweakPower, tweakPower)
+		local sizeX = math.random(-tweakPower, tweakPower)
+		local sizeY = math.random(-tweakPower, tweakPower)
+		local rotationOffset = math.random(-tweakPower*3, tweakPower*3)
+		element.Position = original.Position + UDim2.new(0, offsetX, 0, offsetY)
+		element.Size = original.Size + UDim2.new(0, sizeX, 0, sizeY)
+		element.Rotation = original.Rotation + rotationOffset
+	elseif mode == 2 then -- move
+		local offsetX = math.random(-tweakPower, tweakPower)
+		local offsetY = math.random(-tweakPower, tweakPower)
+		element.Position = original.Position + UDim2.new(0, offsetX, 0, offsetY)
+	elseif mode == 3 then -- size
+		local sizeX = math.random(-tweakPower, tweakPower)
+		local sizeY = math.random(-tweakPower, tweakPower)
+		element.Size = original.Size + UDim2.new(0, sizeX, 0, sizeY)
+	elseif mode == 4 then -- rot
+		local rotationOffset = math.random(-tweakPower*3, tweakPower*3)
+		element.Rotation = original.Rotation + rotationOffset
+	end
+end
+
+local function scanGuis()
+	originalProps = {}
+	storeOriginal(playerGui)
+	if includeCoreGui then
+		storeOriginal(coreGui)
+	end
+end
+scanGuis() -- mine vittu sa fucking idioot nahhui sa seda funktiooni pead kasutama
+
+local screenGui = Instance.new("ScreenGui") -- garbagegpt code
+screenGui.Name = "GooberGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 320, 0, 500)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -250)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BackgroundTransparency = 0.4
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Visible = false
+mainFrame.Parent = screenGui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+title.BackgroundTransparency = 0.3
+title.BorderSizePixel = 0
+title.Text = "GooberGUI"
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Parent = mainFrame
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 8)
+
+local scrollingFrame = Instance.new("ScrollingFrame")
+scrollingFrame.Size = UDim2.new(1, -10, 1, -50)
+scrollingFrame.Position = UDim2.new(0, 5, 0, 45)
+scrollingFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+scrollingFrame.BackgroundTransparency = 0.4
+scrollingFrame.BorderSizePixel = 0
+scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollingFrame.ScrollBarThickness = 6
+scrollingFrame.Parent = mainFrame
+Instance.new("UICorner", scrollingFrame).CornerRadius = UDim.new(0, 6)
+
+local UIListLayout = Instance.new("UIListLayout", scrollingFrame)
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+end)
+
+local function addButton(name, callback, ignoreToggled) -- thanks bbg
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -10, 0, 40)
+	btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+	btn.BackgroundTransparency = 0.3
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.TextScaled = true
+	btn.Font = Enum.Font.GothamBold
+	btn.Text = name
+	btn.Parent = scrollingFrame
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+	btn.MouseButton1Click:Connect(function()
+		callback(btn)
+	end)
+	return btn
+end
+
+-- ME WHEN MY MIND WASNT PLANNING TO DO RELATED SHIT TO GAME CUZ STUPID STUPID GARB GARB WOOOOOOOOOOOOOOOOOOO!!!!!!!!!!!!! --
+local powerBtn = addButton("Power: "..tweakPower, function(b)
+	tweakPower = tweakPower + 1
+	if tweakPower > 10 then tweakPower = 0 end
+	b.Text = "Power: "..tweakPower
+end)
+
+local modeBtn = addButton("Mode: "..mode, function(b)
+	mode = mode + 1
+	if mode > 4 then mode = 1 end
+	b.Text = "Mode: "..mode
+end)
+
+local origPosBtn = addButton("Original Pos: "..tostring(keepOriginal), function(b) -- 50 50 useful turn it off when using beat mode or something
+	keepOriginal = not keepOriginal -- whyu not false????????????????????????
+	b.Text = "Original Pos: "..tostring(keepOriginal)
+end)
+
+local coreGuiBtn = addButton("CoreGui Included: "..tostring(includeCoreGui), function(b)
+	includeCoreGui = not includeCoreGui
+	scanGuis()
+	b.Text = "CoreGui Included: "..tostring(includeCoreGui)
+end)
+
+local delayBtn = addButton("Delay: "..string.format("%.2f", tweakDelay), function(b) -- turns out this delay affects eveyr single fucking thing
+	tweakDelay = tweakDelay + 0.05
+	if tweakDelay > 0.5 then tweakDelay = 0 end
+	b.Text = "Delay: "..string.format("%.2f", tweakDelay)
+end)
+
+local gooberBtn = addButton("Goober: "..tostring(goober), function(b)
+	goober = not goober -- why is goober not goober?
+	b.Text = "Goober: "..tostring(goober) --kys
+end)
+
+local gooberBindBtns = {}
+for i = 1, 4 do
+	gooberBindBtns[i] = addButton("Goober Bind "..i..": "..gooberKeys[i].Name, function(b)
+		changingBind = i
+		b.Text = "Press any key..."
+	end)
+end
+
+-- I STARTED PLANNINGGGGGG YEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!!!!!!!!!!!!!!!!!!!!!!!! --
+local suddenBtn = addButton("Sudden Death: "..tostring(suddenDeath), function(b)
+    suddenDeath = not suddenDeath
+    b.Text = "Sudden Death: "..tostring(suddenDeath) -- c kernel code type shit ifykyk loser
+    if suddenDeath then
+        task.spawn(function()
+            local missedPaths = {
+                player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("YOU"):WaitForChild("Missed"),
+                game.StarterGui:WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("YOU"):WaitForChild("Missed") -- idk just incase i forgot how studio works
+            }
+            while suddenDeath do -- combo method sucked ass dont do that again u literally win a game and then start another one and u lose bc combo gets set back to 0 you fucking dipshit how do you miss that flaw
+                for _, missedSound in ipairs(missedPaths) do
+                    if missedSound:IsA("Sound") and missedSound.IsPlaying then
+                        player:Kick("You missed loser")
+                    end
+                end
+                task.wait(0.05)
+            end
+        end)
+    end
+end)
+
+local notesMemoryBtn = addButton("Memory Mode: "..tostring(notesMemoryMode), function(b) -- hide notes
+    notesMemoryMode = not notesMemoryMode
+    b.Text = "Memory Mode: "..tostring(notesMemoryMode)
+    local notesContainer = player:WaitForChild("PlayerGui") -- dementia?
+        :WaitForChild("ScreenGui")
+        :WaitForChild("GAMEFRAME")
+        :WaitForChild("YOU")
+        :WaitForChild("NotesContainer")
+    if notesMemoryMode then
+        task.spawn(function()
+            while notesMemoryMode do
+                if notesContainer.Visible then
+                    notesContainer.Visible = false
+                end
+                task.wait(0.05)
+            end
+            notesContainer.Visible = true
+        end)
+    else
+        notesContainer.Visible = true
+    end
+end)
+
+local memoryBtn = addButton("Memory Mode 2: "..tostring(memoryMode), function(b) -- hide the entire frame idk what diff it makes for memory but yeah
+    memoryMode = not memoryMode
+    b.Text = "Memory Mode 2:"..tostring(memoryMode)
+    if memoryMode then
+        task.spawn(function()
+            while memoryMode do
+                if youFrame.Visible then
+                    youFrame.Visible = false
+                end
+                task.wait(0.05)
+            end
+            youFrame.Visible = true
+        end)
+    else
+        youFrame.Visible = true
+    end
+end)
+
+local gayBtn = addButton("Gay Mode: "..tostring(gayMode), function(b) -- how did i struggle making this
+	gayMode = not gayMode
+	b.Text = "Gay Mode: "..tostring(gayMode)
+	if gayMode then
+		spawn(function()
+			while gayMode do
+				for element, _ in pairs(originalProps) do
+					if element:IsA("GuiObject") then
+						local r, g, bl = math.random(), math.random(), math.random()
+						element.BackgroundColor3 = Color3.fromRGB(r*255, g*255, bl*255)
+						if element:IsA("TextLabel") or element:IsA("TextButton") then
+							local tr, tg, tb = math.random(), math.random(), math.random()
+							element.TextColor3 = Color3.fromRGB(tr*255, tg*255, tb*255)
+						end
+						if element:IsA("ImageLabel") or element:IsA("ImageButton") then
+							local ir, ig, ib = math.random(), math.random(), math.random()
+							element.ImageColor3 = Color3.fromRGB(ir*255, ig*255, ib*255)
+						end
+					end
+				end
+				task.wait(0.1) --[[ low for no seizure pls dont change future me 
+				i know you want to make a easing type badly but you just cant do it cuz you absolutely suck]] -- fuck you
+			end
+		end)
+	else
+		for element, _ in pairs(originalProps) do
+			restoreElement(element)
+		end
+	end
+end)
+
+--SCRAPPED WIGGLE MODE BC I CANT FIGURE OUT HOW TO MOVE THE FUCKING NOTECONTAINER NOTES CORRECTLY
+
+local circleBtn = addButton("Circle Mode: "..tostring(circleMode), function(b) -- actually fun
+    circleMode = not circleMode
+    b.Text = "Circle Mode: "..tostring(circleMode)
+    if youFrame then
+        local idiotPos = youFrame.Position
+        task.spawn(function()
+            local angle = 0
+            while circleMode do
+                angle = angle + circleSpeed * task.wait() * math.pi * 2
+                local offsetX = math.cos(angle) * circleRadius
+                local offsetY = math.sin(angle) * circleRadius -- stand on the eon
+                youFrame.Position = UDim2.new(
+                    idiotPos.X.Scale,
+                    idiotPos.X.Offset + offsetX,
+                    idiotPos.Y.Scale,
+                    idiotPos.Y.Offset + offsetY
+                )
+            end
+            youFrame.Position = idiotPos
+        end)
+    end
+end)
+
+local speedBtn = addButton("Circle Speed: "..circleSpeed, function(b)
+    circleSpeed = circleSpeed + 0.5
+    if circleSpeed > 10 then
+        circleSpeed = 0
+    end
+    b.Text = "Circle Speed: "..circleSpeed
+end)
+
+local radiusBtn = addButton("Circle Radius: "..circleRadius, function(b)
+    circleRadius = circleRadius + 5
+    if circleRadius > 100 then
+        circleRadius = 0
+    end
+    b.Text = "Circle Radius: "..circleRadius
+end)
+
+--BIG RETARD SECTION
+local beatBtn = addButton("Beat Mode: "..tostring(beatMode), function(b) -- actually fun
+    beatMode = not beatMode
+    b.Text = "Beat Mode: "..tostring(beatMode)
+end)
+
+local beatBindBtns = {}
+for i = 1, 4 do
+    beatBindBtns[i] = addButton("Beat Bind "..i..": "..beatKeys[i].Name, function(b)
+        changingBeatBind = i
+        b.Text = "Press any key..."
+    end)
+end
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if changingBeatBind then
+        beatKeys[changingBeatBind] = input.KeyCode
+        beatBindBtns[changingBeatBind].Text = "Beat Bind "..changingBeatBind..": "..input.KeyCode.Name
+        changingBeatBind = nil
+        return
+    end
+    if beatMode and not gameProcessed then
+        local targetOffsetX = nil
+        if input.KeyCode == beatKeys[1] or input.KeyCode == beatKeys[2] then
+            targetOffsetX = -beatDistance
+        elseif input.KeyCode == beatKeys[3] or input.KeyCode == beatKeys[4] then
+            targetOffsetX = beatDistance
+        end
+        if targetOffsetX then
+            youFrame:TweenPosition(
+                UDim2.new(idiotPos.X.Scale, idiotPos.X.Offset + targetOffsetX,
+                          idiotPos.Y.Scale, idiotPos.Y.Offset),
+                "Out", "Linear", beatSpeedOut, true,
+                function()
+                    youFrame:TweenPosition(
+                        idiotPos,
+                        "Out", "Quad", beatSpeedBack, true -- ??
+                    )
+                end
+            )
+        end
+    end
+end)
+
+local mobileBtn = addButton("Mobile Mode: "..tostring(mobileMode), function(b)
+    mobileMode = not mobileMode
+    b.Text = "Mobile Mode: "..tostring(mobileMode)
+    if mobileFrame then
+        task.spawn(function()
+            while mobileMode do
+                mobileFrame.Visible = true -- how does this garbage work on pc lmaooo
+                task.wait(1)
+            end
+            mobileFrame.Visible = false
+        end)
+    end
+end)
+
+local fontBtn = addButton("Font go cra cra: "..tostring(fontCrazy), function(b)
+	fontCrazy = not fontCrazy
+	b.Text = "Font go cra cra: "..tostring(fontCrazy)
+	if fontCrazy then
+		spawn(function()
+			while fontCrazy do
+				for element, _ in pairs(originalProps) do
+					if element:IsA("TextLabel") or element:IsA("TextButton") then
+						local fonts = Enum.Font:GetEnumItems()
+						element.Font = fonts[math.random(1, #fonts)]
+					end
+				end
+				task.wait(0)
+			end
+		end)
+	else
+		for element, _ in pairs(originalProps) do
+			if element:IsA("TextLabel") or element:IsA("TextButton") then
+				restoreElement(element)
+			end
+		end
+	end
+end)
+-- current stat eof mind : crying
+local teleport1 = addButton("Teleport to Tenna", function() -- KILL YOUR TV KILL YOUR TV KILL YOUR TV KILL YOUR TV KILL YOUR TV KILL YOUR TV
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(-93.5006104, 75.0572662, 34.4994087, -1, 0, 0, 0, -1, 0, 0, 0, 1)
+    end
+end)
+
+local teleport2 = addButton("Teleport to Greenguy", function()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(105.728645, 0.999434948, 54.0273399, 0.626530647, -0, -0.779396892, 0, 1, -0, 0.779396892, 0, 0.626530647)
+    end
+end)
+
+local teleport3 = addButton("Teleport to Asgore", function()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(6.27456093, 4.44826221, 147.566528, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+    end
+end)
+
+local teleport4 = addButton("Teleport to Yellosuu", function()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(89.1847992, 28.8284798, -57.4941254, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+    end
+end)
+
+local teleport5 = addButton("Teleport to Sola", function()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(77.6189651, 217.197525, 117.427292, 0.707134247, 0, 0.707079291, 0, 1, 0, -0.707079291, 0, 0.707134247)
+    end
+end)
+
+local teleport6 = addButton("Teleport to ???", function()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(-152.5, 1.49939895, -73.9999847, 0, 0, 1, 0, 1, -0, -1, 0, 0)
+    end
+end)
+
+local teleport7 = addButton("Teleport to Mysteryman", function() -- HIS NAME IS GASTER TOBY FOX OCNIFRMED IT.-1
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(157.29953, 2.74186754, 1.02453613, 0, 0, 1, 0, 1, -0, -1, 0, 0)
+    end
+end)
+
+local spasmBtn = addButton("Spasm", function() -- FUCKING POINTLESS PIECE OF GARBAGE I SPENT 30 MINUTES ON HOW THE FUCK DID IT TKAEJ UJIGRIHJURWNUHIJOKGRWUIHUIHYBRTWGEIUHWRGHUYIGRWYHUWRFGUIHRGIH
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = player.Character.HumanoidRootPart
+        local duration = 3
+        local startTime = tick()
+        while tick() - startTime < duration do
+            hrp.CFrame = hrp.CFrame * CFrame.new(
+                math.random(-5,5)*0.5,
+                math.random(-5,5)*0.5,
+                math.random(-5,5)*0.5
+            ) * CFrame.Angles(
+                math.rad(math.random(-50,50)),
+                math.rad(math.random(-50,50)),
+                math.rad(math.random(-50,50))
+            )
+            wait(0)
+        end
+    end
+end)
+
+local function promptNotification()
+    local screenGui = Instance.new("ScreenGui") -- tip: dont change this to something else thinking this is the name of the ScreenGui like ofc it cant find a fucking instance named E
+    screenGui.Name = "ClientNotificationGUI"
+    screenGui.ResetOnSpawn = false
+    screenGui.IgnoreGuiInset = true
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 100)
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.Position = UDim2.new(0.5, 0, 0.5, 0) -- fuck you asshole
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.BorderSizePixel = 0
+    frame.Parent = screenGui
+
+    local titleBox = Instance.new("TextBox")
+    titleBox.PlaceholderText = "Enter Text"
+    titleBox.Size = UDim2.new(1, -20, 0, 40)
+    titleBox.Position = UDim2.new(0, 10, 0, 10)
+    titleBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    titleBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleBox.TextScaled = true
+    titleBox.BorderSizePixel = 0
+    titleBox.Parent = frame
+
+    local sendButton = Instance.new("TextButton")
+    sendButton.Text = "gloop"
+    sendButton.Size = UDim2.new(1, -20, 0, 40)
+    sendButton.Position = UDim2.new(0, 10, 0, 55)
+    sendButton.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+    sendButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    sendButton.TextScaled = true
+    sendButton.BorderSizePixel = 0
+    sendButton.Parent = frame
+
+    sendButton.MouseButton1Click:Connect(function()
+        local title = titleBox.Text
+        if title ~= "" then
+            notifEvent:FireServer(title)
+            screenGui:Destroy()
+        end
+    end)
+end
+local notifBtn = addButton("Client Notification", promptNotification)---------------88888888--------------][][][][][]{[]{[][][[[[[[[[[[[[[[]]]]]]]]]]]]]]
+-- current state of mind : y
+local kawaiiBtn = addButton("Kawaii: Off", function(b) -- thanks luna i hate my life
+    local active = false
+    active = not active
+    b.Text = "Kawaii: "..tostring(active)
+    if not active then 
+        if _G.kawaiiConnection then
+            _G.kawaiiConnection:Disconnect()
+            _G.kawaiiConnection = nil
+        end
+        return 
+    end
+    local function killme()
+        local r = math.random(200, 255)
+        local g = math.random(100, 182)
+        local b = math.random(150, 255)
+        return Color3.fromRGB(r, g, b)
+    end
+    local function applyKawaii(container)
+        for _, obj in pairs(container:GetDescendants()) do
+            if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+                obj.TextColor3 = killme()
+                obj.Text = ":3" -- kill me
+                obj.Font = Enum.Font.Cartoon
+            elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
+                obj.ImageColor3 = killme()
+            elseif obj:IsA("Frame") then
+                obj.BackgroundColor3 = killme()
+            end
+        end
+    end
+    applyKawaii(playerGui) -- lmao
+    local UIS = game:GetService("UserInputService")
+    _G.kawaiiConnection = UIS.InputBegan:Connect(function(input, processed)
+        if processed then return end
+        if not active then return end
+
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://4821247887"
+        sound.Volume = 1
+        sound.Parent = playerGui
+        sound:Play()
+        game.Debris:AddItem(sound, 2)
+    end)
+end)
+
+spawn(function()
+	while true do
+		if toggled and not goober then
+			for element, _ in pairs(originalProps) do
+				tweakElement(element)
+			end
+		end
+		task.wait(tweakDelay)
+	end
+end)
+
+UIS.InputBegan:Connect(function(input, processed) -- why is this here
+	if processed then return end
+	if changingBind then
+		gooberKeys[changingBind] = input.KeyCode
+		gooberBindBtns[changingBind].Text = "Goober Bind "..changingBind..": "..input.KeyCode.Name
+		changingBind = nil
+		return
+	end
+	if input.KeyCode == Enum.KeyCode.Delete then
+		guiVisible = not guiVisible
+		mainFrame.Visible = guiVisible
+	elseif input.KeyCode == Enum.KeyCode.End then
+		TeleportService:Teleport(game.PlaceId, player)
+	elseif goober and toggled then
+		for _, key in ipairs(gooberKeys) do
+			if input.KeyCode == key then
+				for element, _ in pairs(originalProps) do
+					tweakElement(element)
+				end
+			end
+		end
+	end
+end)
+
+--[[
+⢿⣿⣿⣿⣭⠹⠛⠛⠛⢿⣿⣿⣿⣿⡿⣿⠷⠶⠿⢻⣿⣛⣦⣙⠻⣿
+⣿⣿⢿⣿⠏⠀⠀⡀⠀⠈⣿⢛⣽⣜⠯⣽⠀⠀⠀⠀⠙⢿⣷⣻⡀⢿
+⠐⠛⢿⣾⣖⣤⡀⠀⢀⡰⠿⢷⣶⣿⡇⠻⣖⣒⣒⣶⣿⣿⡟⢙⣶⣮
+⣤⠀⠀⠛⠻⠗⠿⠿⣯⡆⣿⣛⣿⡿⠿⠮⡶⠼⠟⠙⠊⠁⠀⠸⢣⣿
+⣿⣷⡀⠀⠀⠀⠀⠠⠭⣍⡉⢩⣥⡤⠥⣤⡶⣒⠀⠀⠀⠀⠀⢰⣿⣿
+⣿⣿⡽⡄⠀⠀⠀⢿⣿⣆⣿⣧⢡⣾⣿⡇⣾⣿⡇⠀⠀⠀⠀⣿⡇⠃
+⣿⣿⣷⣻⣆⢄⠀⠈⠉⠉⠛⠛⠘⠛⠛⠛⠙⠛⠁⠀⠀⠀⠀⣿⡇⢸
+⢞⣿⣿⣷⣝⣷⣝⠦⡀⠀⠀⠀⠀⠀⠀⠀⡀⢀⠀⠀⠀⠀⠀⠛⣿⠈
+⣦⡑⠛⣟⢿⡿⣿⣷⣝⢧⡀⠀⠀⣶⣸⡇⣿⢸⣧⠀⠀⠀⠀⢸⡿⡆
+⣿⣿⣷⣮⣭⣍⡛⠻⢿⣷⠿⣶⣶⣬⣬⣁⣉⣀⣀⣁⡤⢴⣺⣾⣽⡇
+]]
