@@ -10,9 +10,9 @@ is this ascii art tuff
 ⢞⣿⣿⣷⣝⣷⣝⠦⡀⠀⠀⠀⠀⠀⠀⠀⡀⢀⠀⠀⠀⠀⠀⠛⣿⠈
 ⣦⡑⠛⣟⢿⡿⣿⣷⣝⢧⡀⠀⠀⣶⣸⡇⣿⢸⣧⠀⠀⠀⠀⢸⡿⡆
 ⣿⣿⣷⣮⣭⣍⡛⠻⢿⣷⠿⣶⣶⣬⣬⣁⣉⣀⣀⣁⡤⢴⣺⣾⣽⡇
-current state of mind: couch setup is goated hold on im coding sizerer
 ]]
--- PREPARE YOURSELF FOR THE MOST UNOPTIMIZED UNCATEGORIZED UNREADABLE CODE OF ALL TIME --
+-- PREPARE YOURSELF FOR THE MOST UNOPTIMIZED UNCATEGORIZED UNREADABLE LOBOTOMIZED CODE OF ALL TIME --
+
 local rig = workspace:WaitForChild("Buildings"):WaitForChild("Rig") -- Rig
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -28,6 +28,17 @@ local mobileFrame = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):W
 local RunService = game:GetService("RunService")
 local tweenService = game:GetService("TweenService")
 local notesContainer = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("YOU"):WaitForChild("NotesContainer") --lol
+
+task.spawn(function() -- funny
+    if not player then return end
+    local fard = Instance.new("Sound")
+    fard.Name = "fard"
+    fard.SoundId = "rbxassetid://8152780685"
+    fard.Volume = 10
+    fard.PlayOnRemove = false
+    fard.Parent = player:WaitForChild("PlayerGui")
+    fard:Play()
+end)
 
 local confusionActive = false --clanker
 local blindnessActive = false --ass
@@ -818,6 +829,68 @@ local blindnessBtn = addButton("Blindness: false", function(b) -- asshole
     end
     blindnessConn = RunService.RenderStepped:Connect(updateBorders)
 end)
+
+local gloop = addButton("Reverse?: false", function(b) -- fym gloop you idiot
+    local active = not (_G.flipNotesActive or false)
+    _G.flipNotesActive = active
+    b.Text = "Reverse?: "..tostring(active)
+    if active then
+        notesContainer.Rotation = 180
+    else
+        notesContainer.Rotation = 0
+    end
+end)
+
+local duplicateNotesBtn = addButton("Duplication: false", function(b)
+    local active = not (_G.duplicateNotesActive or false)
+    _G.duplicateNotesActive = active
+    b.Text = "Duplication: "..tostring(active)
+    if active then
+        _G.duplicateNotesList = {}
+        local bustCount = 0
+        task.spawn(function()
+            while _G.duplicateNotesActive do
+                if math.random(1,10) == 1 then
+                    bustCount = bustCount + 1
+                    -- boing boing unlucky ching ching
+                    for i = 1, 5 do
+                        local clone = notesContainer:Clone()
+                        clone.Name = "RealNotesContainer"
+                        clone.Parent = youFrame
+                        table.insert(_G.duplicateNotesList, clone)
+                        wait(0.1)
+                    end
+                else
+                    -- normal
+                    local clone = notesContainer:Clone()
+                    clone.Name = "RealNotesContainer"
+                    clone.Parent = youFrame
+                    table.insert(_G.duplicateNotesList, clone)
+                end
+                if bustCount >= 10 then
+                    for _, clone in ipairs(_G.duplicateNotesList) do
+                        if clone and clone.Parent then
+                            clone:Destroy()
+                        end
+                    end
+                    _G.duplicateNotesList = {}
+                    bustCount = 0
+                end
+                wait(5)
+            end
+        end)
+    else
+        if _G.duplicateNotesList then
+            for _, clone in ipairs(_G.duplicateNotesList) do
+                if clone and clone.Parent then
+                    clone:Destroy()
+                end
+            end
+            _G.duplicateNotesList = nil
+        end
+    end
+end)
+
 --inconcsieisen bro im havingn a stroke i say inconciscen BOR okay fuck this comemtn agnawyabfwebniuhyfheua9oijfkejiosrfeowiajkoikj
 local rigFollowBtn = addButton("Rig Follow: false", function(b) -- Rig
     local active = not (_G.rigFollowActive or false)
@@ -844,7 +917,7 @@ local rigFollowBtn = addButton("Rig Follow: false", function(b) -- Rig
     end)
 end)
 
-local rigRotateBtn = addButton("Rig Rotate: false", function(b)
+local rigRotateBtn = addButton("Rig Rotate: false", function(b) -- i just realsied why am i using Btn
     local active = not (_G.rigRotateActive or false)
     _G.rigRotateActive = active
     b.Text = "Rig Rotate: " .. tostring(active)
@@ -867,6 +940,45 @@ local rigRotateBtn = addButton("Rig Rotate: false", function(b)
             rig:SetPrimaryPartCFrame(CFrame.new(root.Position + offset) * CFrame.Angles(0, -angle, 0)) -- garebsabrs saM,ATM
         end
     end)
+end)
+
+local yourmother = math.huge
+local scaryLarry = addButton("Scary Larry: "..tostring(suddenDeath), function(b) -- break in
+    suddenDeath = not suddenDeath
+    b.Text = "Scary Larry: "..tostring(suddenDeath)
+    if suddenDeath then
+        task.spawn(function()
+            local missedPaths = {
+                player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("YOU"):WaitForChild("Missed"),
+                game.StarterGui:WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("YOU"):WaitForChild("Missed")
+            }
+            local event = game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("UwU")
+            local args = {yourmother, "Dump", true, "Globe", 5, true} -- your mother
+            while suddenDeath do
+                for _, missedSound in ipairs(missedPaths) do
+                    if missedSound:IsA("Sound") and missedSound.IsPlaying then
+                        for i = 1, 10 do
+                            event:FireServer(unpack(args))
+                        end
+                    end
+                end
+                task.wait(0.05)
+            end
+        end)
+    end
+end)
+
+local forceResetBtn = addButton("Die", function() -- this is what i should do irl
+    if player.Character then
+        player.Character:BreakJoints() -- break my bones yes yes yes
+    end
+end)
+
+local killyourtv = addButton("Kill GUI", function() -- how did i not know that this would be that useful lmao
+    local gui = player:FindFirstChild("PlayerGui"):FindFirstChild("GooberGUI") -- i frogr
+    if gui then
+        gui:Destroy() -- if gui then gui die
+    end
 end)
 
 spawn(function()
@@ -907,16 +1019,8 @@ end)
 --[[
 hey guys its me flying gorilla from my new app on the app store flying gorilla
 its a free download so i hope you you check it out and and i hope-
-⢿⣿⣿⣿⣭⠹⠛⠛⠛⢿⣿⣿⣿⣿⡿⣿⠷⠶⠿⢻⣿⣛⣦⣙⠻⣿
-⣿⣿⢿⣿⠏⠀⠀⡀⠀⠈⣿⢛⣽⣜⠯⣽⠀⠀⠀⠀⠙⢿⣷⣻⡀⢿
-⠐⠛⢿⣾⣖⣤⡀⠀⢀⡰⠿⢷⣶⣿⡇⠻⣖⣒⣒⣶⣿⣿⡟⢙⣶⣮
-⣤⠀⠀⠛⠻⠗⠿⠿⣯⡆⣿⣛⣿⡿⠿⠮⡶⠼⠟⠙⠊⠁⠀⠸⢣⣿
-⣿⣷⡀⠀⠀⠀⠀⠠⠭⣍⡉⢩⣥⡤⠥⣤⡶⣒⠀⠀⠀⠀⠀⢰⣿⣿
-⣿⣿⡽⡄⠀⠀⠀⢿⣿⣆⣿⣧⢡⣾⣿⡇⣾⣿⡇⠀⠀⠀⠀⣿⡇⠃
-⣿⣿⣷⣻⣆⢄⠀⠈⠉⠉⠛⠛⠘⠛⠛⠛⠙⠛⠁⠀⠀⠀⠀⣿⡇⢸
-⢞⣿⣿⣷⣝⣷⣝⠦⡀⠀⠀⠀⠀⠀⠀⠀⡀⢀⠀⠀⠀⠀⠀⠛⣿⠈
-⣦⡑⠛⣟⢿⡿⣿⣷⣝⢧⡀⠀⠀⣶⣸⡇⣿⢸⣧⠀⠀⠀⠀⢸⡿⡆
-⣿⣿⣷⣮⣭⣍⡛⠻⢿⣷⠿⣶⣶⣬⣬⣁⣉⣀⣀⣁⡤⢴⣺⣾⣽⡇
-this guy looks fucking ugly lmao
 why am i keeping this here even -- i dont fucking know bro
+skel: i paid 20 dollars for this
+hi
+uploading to github rn i just finished poop noise yaya
 ]]
