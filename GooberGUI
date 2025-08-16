@@ -1,4 +1,5 @@
 --[[
+is this ascii art tuff
 ⢿⣿⣿⣿⣭⠹⠛⠛⠛⢿⣿⣿⣿⣿⡿⣿⠷⠶⠿⢻⣿⣛⣦⣙⠻⣿
 ⣿⣿⢿⣿⠏⠀⠀⡀⠀⠈⣿⢛⣽⣜⠯⣽⠀⠀⠀⠀⠙⢿⣷⣻⡀⢿
 ⠐⠛⢿⣾⣖⣤⡀⠀⢀⡰⠿⢷⣶⣿⡇⠻⣖⣒⣒⣶⣿⣿⡟⢙⣶⣮
@@ -9,8 +10,9 @@
 ⢞⣿⣿⣷⣝⣷⣝⠦⡀⠀⠀⠀⠀⠀⠀⠀⡀⢀⠀⠀⠀⠀⠀⠛⣿⠈
 ⣦⡑⠛⣟⢿⡿⣿⣷⣝⢧⡀⠀⠀⣶⣸⡇⣿⢸⣧⠀⠀⠀⠀⢸⡿⡆
 ⣿⣿⣷⣮⣭⣍⡛⠻⢿⣷⠿⣶⣶⣬⣬⣁⣉⣀⣀⣁⡤⢴⣺⣾⣽⡇
+current state of mind: couch setup is goated hold on im coding sizerer
 ]]
--- PREPARE YOURSELF FOR THE MOST UNOPTIMIZED UNCATEGORIZED UNREADABLE CODE OF ALL TIME -- and also garbagegpt bro help me add fucking images please how do you not even know with the searxch functionsosnosnohnosns
+-- PREPARE YOURSELF FOR THE MOST UNOPTIMIZED UNCATEGORIZED UNREADABLE CODE OF ALL TIME --
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local coreGui = game:GetService("CoreGui")
@@ -22,13 +24,20 @@ local youFrame = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):Wait
 local idiotPos = youFrame.Position
 local settings = player:WaitForChild("Settings")
 local mobileFrame = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("Mobile")
+local RunService = game:GetService("RunService")
+local tweenService = game:GetService("TweenService")
+local notesContainer = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("YOU"):WaitForChild("NotesContainer") --lol
 
+local confusionActive = false --clanker
+local blindnessActive = false --ass
+local blindnessConn
+local blindnessGui
 local originalProps = {}
 local toggled = true
 local tweakPower = 0
 local mode = 1
 local includeCoreGui = false
-local keepOriginal = true
+local keepOriginal = false
 local tweakDelay = 0.05
 local goober = false
 local suddenDeath = false 
@@ -36,7 +45,7 @@ local suddenDeathActive = false
 local guiVisible = false
 local changingBind = nil
 local gayMode = false
-local spinMode = false
+local spinMode = false -- this doesnt even fucking exist anymore why is it still here
 local fontCrazy = false
 local notesMemoryMode = false
 local memoryMode = false
@@ -48,6 +57,8 @@ local beatMode = false -- crying rn
 local beatDistance = 100
 local beatSpeedOut = 0.05
 local beatSpeedBack = 0.2
+local spinActive = false
+local spinConnection
 local beatKeys = {Enum.KeyCode.D, Enum.KeyCode.F, Enum.KeyCode.J, Enum.KeyCode.K}
 local changingBeatBind = nil
 local gooberKeys = {Enum.KeyCode.D, Enum.KeyCode.F, Enum.KeyCode.J, Enum.KeyCode.K}
@@ -125,7 +136,7 @@ local function scanGuis()
 		storeOriginal(coreGui)
 	end
 end
-scanGuis() -- mine vittu sa fucking idioot nahhui sa seda funktiooni pead kasutama
+scanGuis() -- i broke my chin
 
 local screenGui = Instance.new("ScreenGui") -- garbagegpt code
 screenGui.Name = "GooberGUI"
@@ -203,7 +214,7 @@ local modeBtn = addButton("Mode: "..mode, function(b)
 	b.Text = "Mode: "..mode
 end)
 
-local origPosBtn = addButton("Original Pos: "..tostring(keepOriginal), function(b) -- 50 50 useful turn it off when using beat mode or something
+local origPosBtn = addButton("Original Pos: "..tostring(keepOriginal), function(b) -- 50 50 useful turn it off when using beat mode or something -- august 16: why the fuck does this shit be on by auto
 	keepOriginal = not keepOriginal -- whyu not false????????????????????????
 	b.Text = "Original Pos: "..tostring(keepOriginal)
 end)
@@ -241,7 +252,7 @@ local suddenBtn = addButton("Sudden Death: "..tostring(suddenDeath), function(b)
         task.spawn(function()
             local missedPaths = {
                 player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("YOU"):WaitForChild("Missed"),
-                game.StarterGui:WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("YOU"):WaitForChild("Missed") -- idk just incase i forgot how studio works
+                game.StarterGui:WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("YOU"):WaitForChild("Missed") -- idk just incase i forgot how studio works -- no its literally useless optimize ur code loser
             }
             while suddenDeath do -- combo method sucked ass dont do that again u literally win a game and then start another one and u lose bc combo gets set back to 0 you fucking dipshit how do you miss that flaw
                 for _, missedSound in ipairs(missedPaths) do
@@ -258,11 +269,6 @@ end)
 local notesMemoryBtn = addButton("Memory Mode: "..tostring(notesMemoryMode), function(b) -- hide notes
     notesMemoryMode = not notesMemoryMode
     b.Text = "Memory Mode: "..tostring(notesMemoryMode)
-    local notesContainer = player:WaitForChild("PlayerGui") -- dementia?
-        :WaitForChild("ScreenGui")
-        :WaitForChild("GAMEFRAME")
-        :WaitForChild("YOU")
-        :WaitForChild("NotesContainer")
     if notesMemoryMode then
         task.spawn(function()
             while notesMemoryMode do
@@ -317,7 +323,7 @@ local gayBtn = addButton("Gay Mode: "..tostring(gayMode), function(b) -- how did
 					end
 				end
 				task.wait(0.1) --[[ low for no seizure pls dont change future me 
-				i know you want to make a easing type badly but you just cant do it cuz you absolutely suck]] -- fuck you
+				i know you want to make a easing type badly but you just cant do it cuz you absolutely suck]] -- fuck you .-- nvm u right gng
 			end
 		end)
 	else
@@ -328,7 +334,7 @@ local gayBtn = addButton("Gay Mode: "..tostring(gayMode), function(b) -- how did
 end)
 
 --SCRAPPED WIGGLE MODE BC I CANT FIGURE OUT HOW TO MOVE THE FUCKING NOTECONTAINER NOTES CORRECTLY
-
+--it was garbage anyway sybau syfm icl u pmo kys
 local circleBtn = addButton("Circle Mode: "..tostring(circleMode), function(b) -- actually fun
     circleMode = not circleMode
     b.Text = "Circle Mode: "..tostring(circleMode)
@@ -369,7 +375,7 @@ local radiusBtn = addButton("Circle Radius: "..circleRadius, function(b)
 end)
 
 --BIG RETARD SECTION
-local beatBtn = addButton("Beat Mode: "..tostring(beatMode), function(b) -- actually fun
+local beatBtn = addButton("Beat Mode: "..tostring(beatMode), function(b) -- actually fun mode
     beatMode = not beatMode
     b.Text = "Beat Mode: "..tostring(beatMode)
 end)
@@ -412,14 +418,150 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-local mobileBtn = addButton("Mobile Mode: "..tostring(mobileMode), function(b)
+local sizerBtn = addButton("Sizer Mode: false", function(b) -- this is pretty cool actually -- nevermind i just added sizerer and this is fucking garbage
+    local active = not (_G.sizerActive or false)
+    _G.sizerActive = active
+    b.Text = "Sizer Mode: "..tostring(active)
+    if not active then
+        if _G.sizerTween then
+            _G.sizerTween:Cancel()
+            _G.sizerTween = nil
+        end
+        youFrame.Size = _G.sizerBaseSize or youFrame.Size
+        return
+    end
+    _G.sizerBaseSize = _G.sizerBaseSize or youFrame.Size
+    local baseSize = _G.sizerBaseSize
+    task.spawn(function()
+        while _G.sizerActive do
+            local targetUp = UDim2.new(baseSize.X.Scale + 0.2, baseSize.X.Offset, baseSize.Y.Scale + 0.2, baseSize.Y.Offset)
+            local targetDown = UDim2.new(baseSize.X.Scale - 0.2, baseSize.X.Offset, baseSize.Y.Scale - 0.2, baseSize.Y.Offset)
+            local tweenUp = tweenService:Create(youFrame, TweenInfo.new(0.365, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Size = targetUp}) -- i have spent like 5 minutes trying to get it to sync right to that 5am song
+            tweenUp:Play()
+            _G.sizerTween = tweenUp
+            tweenUp.Completed:Wait()
+            if not _G.sizerActive then break end
+            local tweenDown = tweenService:Create(youFrame, TweenInfo.new(0.165, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Size = targetDown}) -- mofoka put 0.525 ainnoway
+            tweenDown:Play()
+            _G.sizerTween = tweenDown
+            tweenDown.Completed:Wait()
+        end
+        youFrame.Size = baseSize
+    end)
+end)
+
+local sizererBtn = addButton("Sizerer Mode: false", function(b) -- i love my life i love this i love myself im gonna hug myself this is the best thing in my entire life
+    local active = not (_G.sizererActive or false)
+    _G.sizererActive = active
+    b.Text = "Sizerer Mode: "..tostring(active)
+    if not active then
+        _G.sizererActive = false
+        youFrame.Size = _G.sizererBaseSize or youFrame.Size
+        return
+    end
+    _G.sizererBaseSize = _G.sizererBaseSize or youFrame.Size
+    local baseSize = _G.sizererBaseSize
+    local soundContainers = {workspace, game:GetService("ReplicatedStorage")}
+    local cachedSounds = {}
+    for _, container in ipairs(soundContainers) do
+        for _, obj in ipairs(container:GetDescendants()) do
+            if obj:IsA("Sound") then
+                table.insert(cachedSounds, obj)
+            end
+        end
+    end
+    _G.sizererSmoothness = _G.sizererSmoothness or 0.2 -- existence
+    task.spawn(function()
+        local currentScale = 1
+        while _G.sizererActive do
+            local totalLoudness = 0
+            local soundCount = 0
+            for _, sound in ipairs(cachedSounds) do --c ac
+                if sound.IsPlaying then
+                    totalLoudness = totalLoudness + sound.PlaybackLoudness
+                    soundCount = soundCount + 1
+                end
+            end
+            local targetScale = 1
+            if soundCount > 0 then
+                local averageLoudness = totalLoudness / soundCount
+                targetScale = 1 + (averageLoudness / 125) -- the the scale the fuck okayayayayaayaya8y8sdsyufdsfiuhponij ass
+            end
+            local smoothness = _G.sizererSmoothness or 0.2
+            currentScale = currentScale + (targetScale - currentScale) * (1 - smoothness)
+            local targetSize = UDim2.new(baseSize.X.Scale * currentScale, baseSize.X.Offset,
+                                         baseSize.Y.Scale * currentScale, baseSize.Y.Offset)
+            youFrame.Size = targetSize
+            RunService.Heartbeat:Wait()
+        end
+        youFrame.Size = baseSize
+    end)
+end)
+
+local smoothBtn = addButton("Smoothness: 0.20", function(b) -- slut
+    _G.sizererSmoothness = (_G.sizererSmoothness or 0.20) + 0.05
+    if _G.sizererSmoothness > 0.5 then
+        _G.sizererSmoothness = 0
+    end
+    b.Text = string.format("Smoothness: %.2f", _G.sizererSmoothness) -- fuck luau
+end)
+
+local mentalretardationmode = addButton("Confusion Mode: false", function(b) -- crack smoking
+    confusionActive = not confusionActive
+    b.Text = "Confusion Mode: "..tostring(confusionActive)
+    if not confusionActive then
+        notesContainer.Size = _G.confusionBaseSize or notesContainer.Size
+        return
+    end
+    local baseSize = notesContainer.Size
+    _G.confusionBaseSize = baseSize -- where is the part where my sanity gets restored
+    local targetUp = UDim2.new(baseSize.X.Scale, baseSize.X.Offset, baseSize.Y.Scale + 0.5, baseSize.Y.Offset)
+    local targetDown = UDim2.new(baseSize.X.Scale, baseSize.X.Offset, baseSize.Y.Scale - 0.5, baseSize.Y.Offset)
+    task.spawn(function()
+        while confusionActive do
+            local tweenUp = tweenService:Create(notesContainer, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Size = targetUp})
+            tweenUp:Play()
+            tweenUp.Completed:Wait()
+            if not confusionActive then break end
+            local tweenDown = tweenService:Create(notesContainer, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Size = targetDown})
+            tweenDown:Play()
+            tweenDown.Completed:Wait() -- you absolute fucking idiot why do you lag
+        end
+    end)
+end)
+
+local spinBtn = addButton("Spin Mode: false", function(b) -- spin me right round baby right round like a little baby right round right round
+    spinActive = not spinActive -- murder me already please what am i doing with my fucking life
+    b.Text = "Spin Mode: "..tostring(spinActive)
+    if not spinActive and spinConnection then
+        spinConnection:Disconnect()
+        spinConnection = nil
+        youFrame.Rotation = 0
+        return
+    end
+    local direction = 1
+    local timeAccumulator = 0
+    spinConnection = game:GetService("RunService").RenderStepped:Connect(function(dt)
+        if spinActive then
+            youFrame.Rotation = (youFrame.Rotation + direction * 180 * dt) % 360
+            timeAccumulator = timeAccumulator + dt
+            if timeAccumulator >= 10 then
+                direction = -direction -- ah yes logitech make senses direction = -direction ... vorp?
+                -- whats heavier a kilogram of steel or a kilogram of feathers..?
+                timeAccumulator = 0
+            end
+        end
+    end)
+end) -- hey luna if u see this maybe make it change which way it rotates when some fucking beat happens -- thats a stupid fucking idea dont do that
+
+local mobileBtn = addButton("Mobile Mode: "..tostring(mobileMode), function(b) -- coke snorting
     mobileMode = not mobileMode
     b.Text = "Mobile Mode: "..tostring(mobileMode)
     if mobileFrame then
         task.spawn(function()
             while mobileMode do
                 mobileFrame.Visible = true -- how does this garbage work on pc lmaooo
-                task.wait(1)
+                task.wait(1) -- im an absolute fucking buffoon
             end
             mobileFrame.Visible = false
         end)
@@ -514,7 +656,7 @@ end)
 
 local function promptNotification()
     local screenGui = Instance.new("ScreenGui") -- tip: dont change this to something else thinking this is the name of the ScreenGui like ofc it cant find a fucking instance named E
-    screenGui.Name = "ClientNotificationGUI"
+    screenGui.Name = "piss ass ass"
     screenGui.ResetOnSpawn = false
     screenGui.IgnoreGuiInset = true
     screenGui.Parent = player:WaitForChild("PlayerGui")
@@ -589,19 +731,93 @@ local kawaiiBtn = addButton("Kawaii: Off", function(b) -- thanks luna i hate my 
     end
     applyKawaii(playerGui) -- lmao
     local UIS = game:GetService("UserInputService")
+    local CoreGui = game:GetService("CoreGui")
     _G.kawaiiConnection = UIS.InputBegan:Connect(function(input, processed)
         if processed then return end
         if not active then return end
-
+        local targetParent
+        local success, err = pcall(function()
+            targetParent = CoreGui.AppChat.Folder.PageWrapper -- fuck you skel stop reading my code bitchass
+        end)
+        if not success or not targetParent then
+            warn("whoopsie daisies")
+            return
+        end
         local sound = Instance.new("Sound")
         sound.SoundId = "rbxassetid://4821247887"
         sound.Volume = 1
-        sound.Parent = playerGui
+        sound.Parent = targetParent
         sound:Play()
         game.Debris:AddItem(sound, 2)
     end)
 end)
+--tuf
+--iudfjfdsijfdgjiudfgujigujigfdjuigfdjigfdhuigjfgdigfdjidjfdjiijdgfijgjidfijgdfijdfji
+local function poopoo(len)
+    local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    local str = ""
+    for i = 1, len do
+        local rand = math.random(1, #chars)
+        str = str .. string.sub(chars, rand, rand)
+    end
+    return str
+end
 
+local randKickBtn = addButton(poopoo(16), function()
+    game.Players.LocalPlayer:Kick("guhhh idk")
+end)
+
+task.spawn(function()
+    while task.wait() do
+        randKickBtn.Text = poopoo(16)
+    end
+end)
+
+local blindnessBtn = addButton("Blindness: false", function(b) -- asshole
+    blindnessActive = not blindnessActive
+    b.Text = "Blindness: " .. (blindnessActive and "On" or "Off")
+    if not blindnessActive then
+        if blindnessConn then
+            blindnessConn:Disconnect()
+            blindnessConn = nil
+        end
+        if blindnessGui then
+            blindnessGui:Destroy()
+            blindnessGui = nil
+        end
+        return
+    end
+    blindnessGui = Instance.new("ScreenGui")
+    blindnessGui.Name = "haha u a blind mofo"
+    blindnessGui.ResetOnSpawn = false
+    blindnessGui.IgnoreGuiInset = true
+    blindnessGui.Parent = player.PlayerGui
+    local hole = Instance.new("Frame")
+    hole.Name = "asshole"
+    hole.Size = UDim2.new(0, 300, 0, 300)
+    hole.Position = UDim2.new(0.5, -150, 0.6, -150) -- change the 3rd for downward if the the much more the down yes vorp?
+    hole.BackgroundTransparency = 1
+    hole.Parent = blindnessGui
+    local top = Instance.new("Frame"); top.BackgroundColor3 = Color3.new(0,0,0); top.BorderSizePixel = 0; top.Parent = blindnessGui
+    local bottom = Instance.new("Frame"); bottom.BackgroundColor3 = Color3.new(0,0,0); bottom.BorderSizePixel = 0; bottom.Parent = blindnessGui
+    local left = Instance.new("Frame"); left.BackgroundColor3 = Color3.new(0,0,0); left.BorderSizePixel = 0; left.Parent = blindnessGui
+    local right = Instance.new("Frame"); right.BackgroundColor3 = Color3.new(0,0,0); right.BorderSizePixel = 0; right.Parent = blindnessGui
+    local function updateBorders()
+        local abs = hole.AbsolutePosition
+        local size = hole.AbsoluteSize
+        local screen = blindnessGui.AbsoluteSize
+        top.Size = UDim2.new(1, 0, 0, abs.Y)
+        top.Position = UDim2.new(0, 0, 0, 0)
+        bottom.Size = UDim2.new(1, 0, 0, screen.Y - (abs.Y + size.Y)) -- 1 mine over here type shi
+        bottom.Position = UDim2.new(0, 0, 0, abs.Y + size.Y)
+        left.Size = UDim2.new(0, abs.X, 0, screen.Y)
+        left.Position = UDim2.new(0, 0, 0, 0) -- poition lmao u suck at spell
+        right.Size = UDim2.new(0, screen.X - (abs.X + size.X), 0, screen.Y)
+        right.Position = UDim2.new(0, abs.X + size.X, 0, 0) -- fucking game of minesweeper with these values oml
+    end
+    blindnessConn = RunService.RenderStepped:Connect(updateBorders)
+end)
+--inconcsieisen bro im havingn a stroke i say inconciscen BOR okay fuck this comemtn agnawyabfwebniuhyfheua9oijfkejiosrfeowiajkoikj
 spawn(function()
 	while true do
 		if toggled and not goober then
@@ -651,4 +867,5 @@ its a free download so i hope you you check it out and and i hope-
 ⣦⡑⠛⣟⢿⡿⣿⣷⣝⢧⡀⠀⠀⣶⣸⡇⣿⢸⣧⠀⠀⠀⠀⢸⡿⡆
 ⣿⣿⣷⣮⣭⣍⡛⠻⢿⣷⠿⣶⣶⣬⣬⣁⣉⣀⣀⣁⡤⢴⣺⣾⣽⡇
 this guy looks fucking ugly lmao
+why am i keeping this here even -- i dont fucking know bro
 ]]
