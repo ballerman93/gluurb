@@ -13,6 +13,7 @@ is this ascii art tuff
 current state of mind: couch setup is goated hold on im coding sizerer
 ]]
 -- PREPARE YOURSELF FOR THE MOST UNOPTIMIZED UNCATEGORIZED UNREADABLE CODE OF ALL TIME --
+local rig = workspace:WaitForChild("Buildings"):WaitForChild("Rig") -- Rig
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local coreGui = game:GetService("CoreGui")
@@ -818,6 +819,56 @@ local blindnessBtn = addButton("Blindness: false", function(b) -- asshole
     blindnessConn = RunService.RenderStepped:Connect(updateBorders)
 end)
 --inconcsieisen bro im havingn a stroke i say inconciscen BOR okay fuck this comemtn agnawyabfwebniuhyfheua9oijfkejiosrfeowiajkoikj
+local rigFollowBtn = addButton("Rig Follow: false", function(b) -- Rig
+    local active = not (_G.rigFollowActive or false)
+    _G.rigFollowActive = active
+    b.Text = "Rig Follow: " .. tostring(active)
+    if not active then
+        if _G.rigFollowConn then
+            _G.rigFollowConn:Disconnect()
+            _G.rigFollowConn = nil
+        end
+        return
+    end
+    _G.rigFollowConn = RunService.Heartbeat:Connect(function()
+        local char = player.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root then
+            rig:SetPrimaryPartCFrame(CFrame.new(root.Position))
+        end
+    end)
+    task.spawn(function()
+        while _G.rigFollowActive do
+            task.wait(1)
+        end
+    end)
+end)
+
+local rigRotateBtn = addButton("Rig Rotate: false", function(b)
+    local active = not (_G.rigRotateActive or false)
+    _G.rigRotateActive = active
+    b.Text = "Rig Rotate: " .. tostring(active)
+    if not active then
+        if _G.rigRotateConn then
+            _G.rigRotateConn:Disconnect()
+            _G.rigRotateConn = nil
+        end
+        return
+    end
+    local angle = 0
+    local radius = 3
+    local speed = 3
+    _G.rigRotateConn = RunService.Heartbeat:Connect(function(dt)
+        local char = player.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root then
+            angle = angle + speed * dt
+            local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius) -- ii almost failed 7trh grade bc of math
+            rig:SetPrimaryPartCFrame(CFrame.new(root.Position + offset) * CFrame.Angles(0, -angle, 0)) -- garebsabrs saM,ATM
+        end
+    end)
+end)
+
 spawn(function()
 	while true do
 		if toggled and not goober then
