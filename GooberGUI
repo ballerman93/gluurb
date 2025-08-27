@@ -10,8 +10,9 @@ is this ascii art tuff
 ⢞⣿⣿⣷⣝⣷⣝⠦⡀⠀⠀⠀⠀⠀⠀⠀⡀⢀⠀⠀⠀⠀⠀⠛⣿⠈
 ⣦⡑⠛⣟⢿⡿⣿⣷⣝⢧⡀⠀⠀⣶⣸⡇⣿⢸⣧⠀⠀⠀⠀⢸⡿⡆
 ⣿⣿⣷⣮⣭⣍⡛⠻⢿⣷⠿⣶⣶⣬⣬⣁⣉⣀⣀⣁⡤⢴⣺⣾⣽⡇
+current state of mind: couch setup is goated hold on im coding sizerer
 ]]
--- PREPARE YOURSELF FOR THE MOST UNOPTIMIZED UNCATEGORIZED UNREADABLE LOBOTOMIZED CODE OF ALL TIME --
+-- PREPARE YOURSELF FOR THE MOST UNOPTIMIZED UNCATEGORIZED UNREADABLE CODE OF ALL TIME --
 
 local rig = workspace:WaitForChild("Buildings"):WaitForChild("Rig") -- Rig
 local player = game.Players.LocalPlayer
@@ -817,7 +818,7 @@ local blindnessBtn = addButton("Blindness: false", function(b) -- asshole
     local function updateBorders()
         local abs = hole.AbsolutePosition
         local size = hole.AbsoluteSize
-        local screen = blindnessGui.AbsoluteSize
+        local screen = blindnessGui.AbsoluteSize -- RETARD RETARD RETARD
         top.Size = UDim2.new(1, 0, 0, abs.Y)
         top.Position = UDim2.new(0, 0, 0, 0)
         bottom.Size = UDim2.new(1, 0, 0, screen.Y - (abs.Y + size.Y)) -- 1 mine over here type shi
@@ -1022,5 +1023,4 @@ its a free download so i hope you you check it out and and i hope-
 why am i keeping this here even -- i dont fucking know bro
 skel: i paid 20 dollars for this
 hi
-uploading to github rn i just finished poop noise yaya
 ]]
