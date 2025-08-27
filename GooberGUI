@@ -1,3 +1,4 @@
+-- this script is NOT compiled with moonsec v3 or whatever the fuck its named i forgot hi hi hi hi hi hi hi hih ihtjihtgejihetijherijgwrejiwe
 --[[
 is this ascii art tuff
 ⢿⣿⣿⣿⣭⠹⠛⠛⠛⢿⣿⣿⣿⣿⡿⣿⠷⠶⠿⢻⣿⣛⣦⣙⠻⣿
@@ -271,6 +272,17 @@ local suddenBtn = addButton("Sudden Death: "..tostring(suddenDeath), function(b)
                 for _, missedSound in ipairs(missedPaths) do
                     if missedSound:IsA("Sound") and missedSound.IsPlaying then
                         player:Kick("You missed loser")
+                        local soundParent = coreGui:WaitForChild("AppChat"):WaitForChild("Folder") -- i forgot the other path uhh gorp
+                        local sound = Instance.new("Sound")
+                        sound.Name = "lancer"
+                        sound.SoundId = "rbxassetid://135889911457780" -- fart
+                        sound.Volume = 0.5
+                        sound.Parent = soundParent
+                        sound:Play()
+                        task.spawn(function()
+                            sound.Ended:Wait()
+                            sound:Destroy()
+                    end)
                     end
                 end
                 task.wait(0.05)
@@ -343,6 +355,17 @@ local gayBtn = addButton("Gay Mode: "..tostring(gayMode), function(b) -- how did
 		for element, _ in pairs(originalProps) do
 			restoreElement(element)
 		end
+	end
+end)
+
+-- gay text
+spawn(function()
+	local hue = 0
+	while true do
+		hue = (hue + 0.01) % 1
+		local color = Color3.fromHSV(hue, 1, 1)
+		gayBtn.TextColor3 = color
+		task.wait(0.01)
 	end
 end)
 
@@ -818,7 +841,7 @@ local blindnessBtn = addButton("Blindness: false", function(b) -- asshole
     local function updateBorders()
         local abs = hole.AbsolutePosition
         local size = hole.AbsoluteSize
-        local screen = blindnessGui.AbsoluteSize -- RETARD RETARD RETARD
+        local screen = blindnessGui.AbsoluteSize
         top.Size = UDim2.new(1, 0, 0, abs.Y)
         top.Position = UDim2.new(0, 0, 0, 0)
         bottom.Size = UDim2.new(1, 0, 0, screen.Y - (abs.Y + size.Y)) -- 1 mine over here type shi
@@ -959,7 +982,7 @@ local scaryLarry = addButton("Scary Larry: "..tostring(suddenDeath), function(b)
                 for _, missedSound in ipairs(missedPaths) do
                     if missedSound:IsA("Sound") and missedSound.IsPlaying then
                         for i = 1, 10 do
-                            event:FireServer(unpack(args))
+                            event:FireServer(unpack(args)) -- get externally detected hopefully
                         end
                     end
                 end
@@ -969,10 +992,481 @@ local scaryLarry = addButton("Scary Larry: "..tostring(suddenDeath), function(b)
     end
 end)
 
-local forceResetBtn = addButton("Die", function() -- this is what i should do irl
+-- i wrote so much fucking code and  I  FOROGOT T TO SA E THIS FFUCIDCKINMG BULKLSHJTIH
+
+local nanananaboobooWee = addButton("more rotating dogshit: false", function(b)
+    _G.nanananaboobooWeeActive = not (_G.nanananaboobooWeeActive or false)
+    b.Text = "more rotating dogshit: " .. tostring(_G.nanananaboobooWeeActive)
+    if not _G.nanananaboobooWeeActive then
+        youFrame.Rotation = 0
+        return
+    end
+    task.spawn(function()
+        local nanananaboobooT = 0
+        while _G.nanananaboobooWeeActive do
+            nanananaboobooT += RunService.Heartbeat:Wait() -- why are you giving me an error what is the fucking error
+            youFrame.Rotation = math.sin(nanananaboobooT * 2) * 15
+        end
+        youFrame.Rotation = 0
+    end)
+end)
+
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSGJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+--HAHASJDKGHYUDASHGDASHGFADSHJ
+
+local randomKeybinds = addButton("keybind mind fuckery: false", function(b)
+    local active = not (_G.randomKeybindsActive or false)
+    _G.randomKeybindsActive = active
+    b.Text = "keybind mind fuckery: "..tostring(active)
+    if not active then
+        if _G.randomKeybindsGui then
+            _G.randomKeybindsGui:Destroy()
+            _G.randomKeybindsGui = nil
+        end
+        if _G.randomKeybindsConnection then
+            _G.randomKeybindsConnection:Disconnect()
+            _G.randomKeybindsConnection = nil
+        end
+        return
+    end
+    settings:WaitForChild("Z").Value = "Insert"
+    settings:WaitForChild("X").Value = "Home"
+    local letters = {} -- abdefgihjklemnopqerasztuvwexyz
+    for i = 65, 90 do
+        local ch = string.char(i)
+        if ch ~= "I" and ch ~= "O" then
+            table.insert(letters, ch)
+        end
+    end
+    local currentKey1, currentKey2 = "Insert", "Home"
+    local nextKey1, nextKey2 = "-", "-"
+    -- before if u toggled it off then it just killed the whole gui go fuck yourself
+    local keybindsGui = Instance.new("ScreenGui")
+    keybindsGui.ResetOnSpawn = false
+    keybindsGui.Parent = playerGui
+    _G.randomKeybindsGui = keybindsGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 220, 0, 80)
+    frame.Position = UDim2.new(0, 10, 0.5, -40)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BackgroundTransparency = 0.3
+    frame.BorderSizePixel = 0
+    frame.Parent = keybindsGui
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+
+    local currentLabel = Instance.new("TextLabel")
+    currentLabel.Size = UDim2.new(1, -10, 0, 25)
+    currentLabel.Position = UDim2.new(0, 5, 0, 5)
+    currentLabel.BackgroundTransparency = 1
+    currentLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+    currentLabel.Font = Enum.Font.GothamBold
+    currentLabel.TextScaled = true
+    currentLabel.Text = "Current: - / -"
+    currentLabel.Parent = frame
+
+    local nextLabel = Instance.new("TextLabel")
+    nextLabel.Size = UDim2.new(1, -10, 0, 25)
+    nextLabel.Position = UDim2.new(0, 5, 0, 30)
+    nextLabel.BackgroundTransparency = 1
+    nextLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+    nextLabel.Font = Enum.Font.GothamBold
+    nextLabel.TextScaled = true
+    nextLabel.Text = "Next: - / -"
+    nextLabel.Parent = frame
+
+    local timerLabel = Instance.new("TextLabel")
+    timerLabel.Size = UDim2.new(1, -10, 0, 20)
+    timerLabel.Position = UDim2.new(0, 5, 0, 55)
+    timerLabel.BackgroundTransparency = 1
+    timerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    timerLabel.Font = Enum.Font.Gotham
+    timerLabel.TextScaled = true
+    timerLabel.Text = "Timer: 15"
+    timerLabel.Parent = frame
+    _G.randomKeybindsConnection = UIS.InputBegan:Connect(function(input, processed)
+        if not _G.randomKeybindsActive then return end
+        if processed then return end
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            local keyName = input.KeyCode.Name
+            if keyName == "Insert" or keyName == "Home" then return end -- fuckass keys
+            if keyName == currentKey1 then
+                game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Insert, false, game) -- wjat tje fick
+            elseif keyName == currentKey2 then
+                game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Home, false, game) -- wjat tje fick
+            end
+        end
+    end)
+    task.spawn(function()
+        while _G.randomKeybindsActive do
+            nextKey1 = letters[math.random(1, #letters)]
+            nextKey2 = letters[math.random(1, #letters)]
+            nextLabel.Text = "Next: "..nextKey1.." / "..nextKey2
+            for t = 15, 0, -1 do
+                if not _G.randomKeybindsActive then break end
+                timerLabel.Text = "Timer: "..t
+                currentLabel.Text = "Current: "..currentKey1.." / "..currentKey2
+                task.wait(1)
+            end
+            if not _G.randomKeybindsActive then break end
+            currentKey1, currentKey2 = nextKey1, nextKey2
+            local coreGui = game:GetService("CoreGui")
+            local soundParent = coreGui:WaitForChild("AppChat"):WaitForChild("Folder") -- i forgot the other path uhh gorp
+            local sound = Instance.new("Sound")
+            sound.Name = "blorp"
+            sound.SoundId = "rbxassetid://138251332" -- i love touhou
+            sound.Volume = 0.5
+            sound.Parent = soundParent
+            sound:Play()
+            task.spawn(function()
+                sound.Ended:Wait()
+                sound:Destroy()
+            end)
+        end
+    end)
+end)
+
+local blink = addButton("Blinking: false", function(b) -- open hexagon my goat bro
+    local active = not (_G.blinkModeActive or false)
+    _G.blinkModeActive = active
+    b.Text = "Blinking: " .. tostring(active) -- fucking 4 years ago dogshit
+    if not active then
+        if _G.blinkGui then
+            _G.blinkGui:Destroy()
+            _G.blinkGui = nil
+        end
+        return
+    end
+    local screenGui = Instance.new("ScreenGui") -- garbage
+    screenGui.IgnoreGuiInset = true
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = playerGui
+    _G.blinkGui = screenGui
+    local overlay = Instance.new("Frame")
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.BackgroundColor3 = Color3.new(0, 0, 0)
+    overlay.BackgroundTransparency = 1
+    overlay.BorderSizePixel = 0
+    overlay.Parent = screenGui
+    task.spawn(function()
+        while _G.blinkModeActive and overlay.Parent do
+            task.wait(math.random(1, 3))
+            local tweenIn = tweenService:Create(
+                overlay,
+                TweenInfo.new(0.05, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+                {BackgroundTransparency = 0}
+            )
+            tweenIn:Play()
+            tweenIn.Completed:Wait()
+            task.wait(0.02)
+            local tweenOut = tweenService:Create(
+                overlay,
+                TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.In),
+                {BackgroundTransparency = 1}
+            )
+            tweenOut:Play()
+            tweenOut.Completed:Wait()
+        end
+    end)
+end)
+
+local uhhhhhh = addButton("im out of ideas", function(b) -- dont dirnk spirtiew sa fujcking lookllakas lmao
+    b.Text = "whoopsie"
+    local soundParent = coreGui:WaitForChild("AppChat"):WaitForChild("Folder")
+    local sfx = Instance.new("Sound")
+    sfx.SoundId = "rbxassetid://112521323444631" -- im gonna burn my house down
+    sfx.Volume = 1 -- do i needa specifcy allat
+    sfx.Parent = soundParent
+    sfx:Play()
+    sfx.Ended:Connect(function()
+        sfx:Destroy()
+    end)
+    task.delay(8.7, function() -- -2
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                obj.Material = Enum.Material.Neon
+                obj.BrickColor = BrickColor.new("Really red")
+                local fire = Instance.new("Fire") ---XAXAXAXAXAXA stop overwrinting the code
+                -- ok sorry can we hop on disc call
+                --uye eys eys YHUBOR
+                fire.Size = math.max(obj.Size.X, obj.Size.Y, obj.Size.Z) / 2
+                fire.Heat = 10
+                fire.Parent = obj
+            end
+        end
+    end)
+end)
+
+local ithinklunalikescubessoispentalittlebitoftimemakingthis = addButton("cubes cuz why not: false", function(b)
+    local active = not (_G.spawnCubesActive or false)
+    _G.spawnCubesActive = active
+    b.Text = "cubes cuz why not: "..tostring(active) -- cuz u fucking suck idiot loser
+    if not active then return end
+    local Debris = game:GetService("Debris")
+    local materials = { 
+        Enum.Material.Plastic,
+        Enum.Material.Wood,
+        Enum.Material.Metal,
+        Enum.Material.Neon,
+        Enum.Material.Granite,
+        Enum.Material.Slate,
+        Enum.Material.Cobblestone, -- minceraft
+        Enum.Material.Ice,
+        Enum.Material.Fabric,
+        Enum.Material.SmoothPlastic
+    }
+
+    task.spawn(function()
+        while _G.spawnCubesActive do
+            local cube = Instance.new("Part")
+            cube.Size = Vector3.new( -- ??? why
+                1,
+                1,
+                1
+            )
+            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            cube.Position = root and (root.Position + Vector3.new(math.random(-2,2), 8, math.random(-2,2))) or Vector3.new(0, 8, 0)
+            cube.Anchored = false
+            cube.CanCollide = true
+            cube.BrickColor = BrickColor.Random()
+            cube.Material = materials[math.random(1, #materials)]
+            cube.Parent = workspace
+            Debris:AddItem(cube, 15)
+            task.wait(0.1)--v_1
+        end
+    end)
+end)
+
+local giveGunBtn = addButton("get gun that doesnt work", function() -- literally fucking pointless
+    local backpack = player:WaitForChild("Backpack")
+    local gunAssettId = 130113146
+    local success, tool = pcall(function()
+        return game:GetObjects("rbxassetid://" .. gunAssettId)[1] -- assett :sob:
+    end)
+    if success and tool and tool:IsA("Tool") then -- if tool is tool then tool
+        if backpack:FindFirstChild(tool.Name) then return end
+        tool.Parent = backpack
+    end
+end)
+
+local rollSongsBtn = addButton("Sickass song roller", function(b)
+    local songsFolder = RS:WaitForChild("Songs")
+    local songNames = {}
+    for _, folder in ipairs(songsFolder:GetChildren()) do
+        if folder:IsA("Folder") then
+            table.insert(songNames, folder.Name)
+        end
+    end
+
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = game.CoreGui
+    screenGui.Name = "songroller"
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 400, 0, 150) -- DONT YOUJ DARE
+    frame.Position = UDim2.new(0.5, -200, 0.5, -75)
+    frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    frame.BorderSizePixel = 0
+    frame.Parent = screenGui
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0,10)
+
+    local rollingLabel = Instance.new("TextLabel")
+    rollingLabel.Size = UDim2.new(1,0,1,0)
+    rollingLabel.Position = UDim2.new(0,0,0,0)
+    rollingLabel.BackgroundTransparency = 1
+    rollingLabel.TextColor3 = Color3.new(1,1,1)
+    rollingLabel.Font = Enum.Font.GothamBold
+    rollingLabel.TextScaled = true
+    rollingLabel.Text = ""
+    rollingLabel.Parent = frame
+
+    local totalRolls = 30
+    local delayTime = 0.05
+    local chosenSong = ""
+    task.spawn(function()
+        for i = 1, totalRolls do
+            local idx = math.random(1, #songNames)
+            rollingLabel.Text = songNames[idx]
+            chosenSong = songNames[idx]
+            local sfx = Instance.new("Sound")
+            sfx.Name = "rollin"
+            sfx.Volume = 1
+            sfx.Parent = game.CoreGui
+            if i == totalRolls then -- ah hah ha ha hah hah hahha funnuynununununun nuyu nu
+                sfx.SoundId = "rbxassetid://122910673649912"
+            else
+                sfx.SoundId = "rbxassetid://98418310607206" -- youch -- changed cuz ears are nice to have
+            end
+            sfx:Play()
+            game.Debris:AddItem(sfx, 2) -- sorworl
+            task.wait(delayTime)
+            delayTime = delayTime + 0.01 -- sweeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeew
+        end
+    end)
+
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 20, 0, 20) -- smol
+    closeBtn.Position = UDim2.new(1, -25, 0, 5)
+    closeBtn.Text = "X"
+    closeBtn.BackgroundColor3 = Color3.fromRGB(80,80,80)
+    closeBtn.TextColor3 = Color3.new(1,1,1)
+    closeBtn.Parent = frame
+    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0,6)
+    closeBtn.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+end)
+
+local adminsongthingy = addButton("Admin song chooser thingy", function(b)
+    local songsFolder = RS:WaitForChild("Songs")
+    local musicFolder = RS:WaitForChild("Music")
+    local dumpFolder = songsFolder:FindFirstChild("Dump")
+
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "adminsongchoosethingymajig"
+    screenGui.Parent = game.CoreGui
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 400, 0, 300)
+    frame.Position = UDim2.new(0.5, -200, 0.5, -140)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BorderSizePixel = 0
+    frame.Parent = screenGui
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -40, 0, 40)
+    title.Position = UDim2.new(0, 10, 0, 0)
+    title.BackgroundTransparency = 0.3
+    title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    title.BorderSizePixel = 0
+    title.Text = "Play Dump after you select one of these"
+    title.TextColor3 = Color3.new(1, 1, 1)
+    title.Font = Enum.Font.GothamBold
+    title.TextScaled = true
+    title.Parent = frame
+    Instance.new("UICorner", title).CornerRadius = UDim.new(0, 8)
+
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 20, 0, 20)
+    closeBtn.Position = UDim2.new(1, -25, 0, 10)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    closeBtn.TextColor3 = Color3.new(1, 1, 1) --minesweeper shit agian
+    closeBtn.Text = "X"
+    closeBtn.Parent = frame
+    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+
+    closeBtn.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+
+    local folderNames = {
+        "Field of Hopes and Dreams [Admin owo]", -- kill me
+        "Sweet But Psycho [ABMIN]",
+        "still into you [abmin uwuu nyaasaaaaa]", -- kill me
+        "Collapse of Ego (psst admin)",
+        "Vapor Battle"
+    }
+
+    local buttons = {}
+    for i, name in ipairs(folderNames) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, -20, 0, 40)
+        btn.Position = UDim2.new(0, 10, 0, 50 + (i-1)*50)
+        btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+        btn.TextColor3 = Color3.new(1, 1, 1)
+        btn.Text = name
+        btn.Font = Enum.Font.GothamBold
+        btn.TextScaled = true
+        btn.Parent = frame
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        table.insert(buttons, btn)
+
+        btn.MouseButton1Click:Connect(function()
+            for _, child in ipairs(dumpFolder:GetChildren()) do
+                child:Destroy()
+            end
+
+            local sourceFolder = songsFolder:FindFirstChild(name)
+            if sourceFolder then
+                for _, item in ipairs(sourceFolder:GetChildren()) do
+                    item:Clone().Parent = dumpFolder
+                end
+            end
+
+            local dumpAudio = musicFolder:FindFirstChild("Dump")
+            if dumpAudio then
+                dumpAudio:Destroy()
+            end
+
+            local adminAudio = musicFolder:FindFirstChild(name)
+            if adminAudio then
+                local newDump = adminAudio:Clone()
+                newDump.Name = "Dump"
+                newDump.Parent = musicFolder
+            end
+            screenGui:Destroy()
+        end)
+    end
+end)
+
+local safemode = addButton("Safe Mode which you cant toggle off once turned on cuz funny: false", function(b) -- thanks skel
+    local active = not (_G.safeActive or false) -- thanks skel
+    _G.safeActive = active -- thanks skel
+    b.Text = "Safe Mode: "..tostring(active) -- thanks skel
+    if not active then -- thanks skel
+        return -- thanks skel
+    end -- thanks skel
+    local mt = getrawmetatable(game) -- thanks skel
+    setreadonly(mt, false) -- thanks skel
+    local oldNamecall = mt.__namecall -- thanks skel
+    mt.__namecall = newcclosure(function(self, ...) -- thanks skel
+        local method = getnamecallmethod() -- thanks skel
+        local args = { ... } -- thanks skel
+        if self.Name == 'UwU' and method == 'FireServer' then -- kill me
+            args[1] = 0 -- thanks skel
+            args[3] = false -- thanks skel
+        end -- thanks skel
+        return oldNamecall(self, unpack(args)) -- thanks skel
+    end) -- thanks skel
+    setreadonly(mt, true) -- thanks skel
+end) -- thanks skel
+
+local forceReset = addButton("Die", function() -- this is what i should do irl
     if player.Character then
         player.Character:BreakJoints() -- break my bones yes yes yes
     end
+    local soundParent = coreGui
+    local sfx = Instance.new("Sound")
+    sfx.Name = "scp173"
+    sfx.SoundId = "rbxassetid://95012964884528" -- coolio sound idk ok wtv
+    sfx.Volume = 1
+    sfx.Parent = soundParent
+    sfx:Play()
+    task.spawn(function()
+        sfx.Ended:Wait()
+        sfx:Destroy()
+    end)
+end)
+
+local iamveryboredBtn = addButton("Crash", function(b)
+    task.spawn(function()
+        while true do
+            table.insert({}, math.random())
+        end
+    end)
 end)
 
 local killyourtv = addButton("Kill GUI", function() -- how did i not know that this would be that useful lmao
@@ -1004,6 +1498,16 @@ UIS.InputBegan:Connect(function(input, processed) -- why is this here
 	if input.KeyCode == Enum.KeyCode.Delete then
 		guiVisible = not guiVisible
 		mainFrame.Visible = guiVisible
+		local sound = Instance.new("Sound") -- cant decide between sound or sfx
+		sound.Name = "harharharharhar"
+		sound.SoundId = "rbxassetid://8930408685"
+		sound.Volume = 1
+		sound.Parent = coreGui
+		sound:Play()
+		task.spawn(function()
+			sound.Ended:Wait()
+			sound:Destroy()
+		end)
 	elseif input.KeyCode == Enum.KeyCode.End then
 		TeleportService:Teleport(game.PlaceId, player)
 	elseif goober and toggled then
@@ -1023,4 +1527,5 @@ its a free download so i hope you you check it out and and i hope-
 why am i keeping this here even -- i dont fucking know bro
 skel: i paid 20 dollars for this
 hi
+boo
 ]]
