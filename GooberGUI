@@ -1376,8 +1376,7 @@ local adminsongthingy = addButton("Admin song chooser thingy", function(b)
         "Field of Hopes and Dreams [Admin owo]", -- kill me
         "Sweet But Psycho [ABMIN]",
         "still into you [abmin uwuu nyaasaaaaa]", -- kill me
-        "Collapse of Ego (psst admin)",
-        "Vapor Battle"
+        "Collapse of Ego (psst admin)"
     }
 
     local buttons = {}
