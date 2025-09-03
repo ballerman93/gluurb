@@ -17,6 +17,7 @@ current state of mind: couch setup is goated hold on im coding sizerer
 
 local rig = workspace:WaitForChild("Buildings"):WaitForChild("Rig") -- Rig
 local player = game.Players.LocalPlayer
+local character = player.Character -- kys moment
 local playerGui = player:WaitForChild("PlayerGui")
 local coreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
@@ -30,7 +31,12 @@ local mobileFrame = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):W
 local RunService = game:GetService("RunService")
 local tweenService = game:GetService("TweenService")
 local notesContainer = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):WaitForChild("GAMEFRAME"):WaitForChild("YOU"):WaitForChild("NotesContainer") --lol
-
+local Players = game:GetService("Players") -- ???
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+    
 task.spawn(function() -- funny
     if not player then return end
     local fard = Instance.new("Sound")
@@ -42,6 +48,14 @@ task.spawn(function() -- funny
     fard:Play()
 end)
 
+task.spawn(function() -- luna
+    local byebye = math.random(1, 100)
+    if byebye == 100 then
+        player:Kick("meow mrrrp nya miau purr mrrp mew >^.^<")
+    end
+end)
+
+local wadafakActiveeeeeeeee = false
 local confusionActive = false --clanker
 local blindnessActive = false --ass
 local blindnessConn
@@ -735,7 +749,7 @@ local function promptNotification()
 end
 local notifBtn = addButton("Client Notification", promptNotification)---------------88888888--------------][][][][][]{[]{[][][[[[[[[[[[[[[[]]]]]]]]]]]]]]
 -- current state of mind : y
-local kawaiiBtn = addButton("Kawaii: Off", function(b) -- thanks luna i hate my life
+local kawaii = addButton("Kawaii: Off", function(b) -- thanks luna i hate my life
     local active = false
     active = not active
     b.Text = "Kawaii: "..tostring(active)
@@ -771,11 +785,11 @@ local kawaiiBtn = addButton("Kawaii: Off", function(b) -- thanks luna i hate my 
     _G.kawaiiConnection = UIS.InputBegan:Connect(function(input, processed)
         if processed then return end
         if not active then return end
-        local targetParent
+        local POOPERDOOP
         local success, err = pcall(function()
-            targetParent = CoreGui.AppChat.Folder.PageWrapper -- fuck you skel stop reading my code bitchass
+            POOPERDOOP = CoreGui.AppChat.Folder.PageWrapper -- fuck you skel stop reading my code bitchass
         end)
-        if not success or not targetParent then
+        if not success or not POOPERDOOP then
             warn("whoopsie daisies")
             return
         end
@@ -992,7 +1006,7 @@ local scaryLarry = addButton("Scary Larry: "..tostring(suddenDeath), function(b)
     end
 end)
 
--- i wrote so much fucking code and  I  FOROGOT T TO SA E THIS FFUCIDCKINMG BULKLSHJTIH
+-- i wrote so much fucking bs and  I  FOROGOT T TO SA E THIS FFUCIDCKINMG BULKLSHJTIH
 
 local nanananaboobooWee = addButton("more rotating dogshit: false", function(b)
     _G.nanananaboobooWeeActive = not (_G.nanananaboobooWeeActive or false)
@@ -1339,7 +1353,7 @@ local adminsongthingy = addButton("Admin song chooser thingy", function(b)
     screenGui.Parent = game.CoreGui
     
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 400, 0, 300)
+    frame.Size = UDim2.new(0, 400, 0, 300) -- where did i put the size
     frame.Position = UDim2.new(0.5, -200, 0.5, -140)
     frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     frame.BorderSizePixel = 0
@@ -1377,6 +1391,7 @@ local adminsongthingy = addButton("Admin song chooser thingy", function(b)
         "Sweet But Psycho [ABMIN]",
         "still into you [abmin uwuu nyaasaaaaa]", -- kill me
         "Collapse of Ego (psst admin)"
+        -- why did i add fucking vapor buster its literally in the game am i schizo
     }
 
     local buttons = {}
@@ -1421,6 +1436,109 @@ local adminsongthingy = addButton("Admin song chooser thingy", function(b)
     end
 end)
 
+local wadafak = addButton("funny anim rot thing: false", function(b)
+    wadafakActiveeeeeeeee = not wadafakActiveeeeeeeee
+    b.Text = "funny anim rot thing: "..tostring(wadafakActiveeeeeeeee)
+    if not character then return end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    task.spawn(function()
+        while wadafakActiveeeeeeeee and hrp.Parent do
+            local currentCFrame = hrp.CFrame
+            hrp.CFrame = CFrame.new(currentCFrame.Position) * CFrame.Angles(math.rad(180), 0, 0)
+            task.wait(0.01)
+        end
+    end)
+    if not wadafakActiveeeeeeeee then
+        hrp.CFrame = CFrame.new(hrp.Position)
+    end
+end)
+
+local boo = addButton("testering: false", function(b)
+    local active = not (_G.freeCamActive or false)
+    _G.freeCamActive = active -- original freecam but inf yeild so no fuck ofcf nolt chanigng the fustupid vars
+    b.Text = "testering: "..tostring(active)
+    if active then
+        _G.originalCameraType = camera.CameraType
+        camera.CameraType = Enum.CameraType.Scriptable
+        camera.CFrame = player.Character and player.Character:FindFirstChild("HumanoidRootPart") 
+            and CFrame.new(player.Character.HumanoidRootPart.Position) 
+            or camera.CFrame
+        local sensitivity = 1
+        local yaw = 0
+        local pitch = 0
+        local lastMousePos
+        _G.freeCamInputConn = UserInputService.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement and _G.freeCamActive then
+                if lastMousePos then
+                    local delta = input.Position - lastMousePos
+                    yaw = yaw - delta.X * sensitivity * 0.01
+                    pitch = math.clamp(pitch - delta.Y * sensitivity * 0.01, -math.pi, math.pi)
+                end
+                lastMousePos = input.Position
+            end
+        end)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement and _G.freeCamActive then
+                lastMousePos = nil
+            end
+        end)
+        _G.freeCamRenderConn = RunService.RenderStepped:Connect(function()
+            if not _G.freeCamActive then return end
+            local charHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            local pos = charHRP and charHRP.Position or camera.CFrame.Position
+            local rot = CFrame.Angles(pitch, yaw, 0)
+            camera.CFrame = CFrame.new(pos) * rot
+        end)
+    else
+        if _G.freeCamInputConn then
+            _G.freeCamInputConn:Disconnect()
+            _G.freeCamInputConn = nil
+        end
+        if _G.freeCamRenderConn then
+            _G.freeCamRenderConn:Disconnect()
+            _G.freeCamRenderConn = nil
+        end
+        camera.CameraType = _G.originalCameraType or Enum.CameraType.Custom
+    end
+end)
+
+local disableBGthing = addButton("byebye 2k 4k frames: false", function(b)
+    local active = not (_G.disable2K4KActive or false)
+    _G.disable2K4KActive = active
+    b.Text = "byebye 2k 4k frames: " .. tostring(active)
+    youFrame["2K"].Visible = not active
+    youFrame["4K"].Visible = not active
+end)
+
+local poo = addButton("Poo: Off", function(b)
+    _G.pooActive = not (_G.pooActive or false)
+    b.Text = "Poo: "..tostring(_G.pooActive)
+    local toggle = _G.pooActive
+    local function lmaowhatthefuck(parent)
+        for _, obj in pairs(parent:GetDescendants()) do
+            if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                obj.Text = "poo"
+            elseif obj:IsA("StringValue") then
+                obj.Value = "poo"
+            end
+        end
+    end
+    if toggle then
+        spawn(function()
+            while _G.pooActive do
+                wait(1)
+                for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+                    if p:FindFirstChild("PlayerGui") then
+                        lmaowhatthefuck(p.PlayerGui)
+                    end
+                end
+                lmaowhatthefuck(game)
+            end
+        end)
+    end
+end)
+
 local safemode = addButton("Safe Mode which you cant toggle off once turned on cuz funny: false", function(b) -- thanks skel
     local active = not (_G.safeActive or false) -- thanks skel
     _G.safeActive = active -- thanks skel
@@ -1460,10 +1578,10 @@ local forceReset = addButton("Die", function() -- this is what i should do irl
     end)
 end)
 
-local iamveryboredBtn = addButton("Crash", function(b)
+local iamveryboredBtn = addButton("Crash", function(b) -- why
     task.spawn(function()
         while true do
-            table.insert({}, math.random())
+            table.insert({}, math.random()) -- idk chatgpt gave this and it works
         end
     end)
 end)
