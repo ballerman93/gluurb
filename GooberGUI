@@ -12,9 +12,8 @@ is this ascii art tuff tho
 ⢞⣿⣿⣷⣝⣷⣝⠦⡀⠀⠀⠀⠀⠀⠀⠀⡀⢀⠀⠀⠀⠀⠀⠛⣿⠈
 ⣦⡑⠛⣟⢿⡿⣿⣷⣝⢧⡀⠀⠀⣶⣸⡇⣿⢸⣧⠀⠀⠀⠀⢸⡿⡆
 ⣿⣿⣷⣮⣭⣍⡛⠻⢿⣷⠿⣶⣶⣬⣬⣁⣉⣀⣀⣁⡤⢴⣺⣾⣽⡇
-current state of mind: couch setup is goated hold on im coding sizerer
+current state of mind: yoh
 ]]
--- PREPARE YOURSELF FOR THE MOST UNOPTIMIZED UNCATEGORIZED UNREADABLE CODE OF ALL TIME --
 
 local rig = workspace:WaitForChild("Buildings"):WaitForChild("Rig") -- Rig
 local player = game.Players.LocalPlayer
