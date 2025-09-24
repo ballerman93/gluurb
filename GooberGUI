@@ -787,7 +787,7 @@ local kawaii = addButton("Kawaii: Off", function(b) -- thanks luna i hate my lif
         if not active then return end
         local POOPERDOOP
         local success, err = pcall(function()
-            POOPERDOOP = CoreGui.AppChat.Folder.PageWrapper -- fuck you skel stop reading my code bitchass
+            POOPERDOOP = CoreGui.AppChat.Folder.PageWrapper
         end)
         if not success or not POOPERDOOP then
             warn("whoopsie daisies")
