@@ -264,7 +264,7 @@ local Window = Rayfield:CreateWindow({
     Name = "DogshitterV0.12",
     LoadingTitle = "Loading malware...",
     LoadingSubtitle = "by Your Mom",
-    Theme = "DarkBlue",
+    Theme = "DarkRed",
     DisableRayfieldPrompts = false,
     DisableBuildWarnings = false,
     ConfigurationSaving = {
@@ -635,7 +635,7 @@ RunService.RenderStepped:Connect(function()
         -- Hold note logic
         if holdPresent and not lane.held and not lane.pending then
             lane.pending = task.spawn(function()
-                task.wait(0.1)
+                task.wait(0)
                 if holdExistsInLane(lane) then
                     lane.held = true
                     keyDown(lane.key)
