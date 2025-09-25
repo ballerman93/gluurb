@@ -267,7 +267,7 @@ local Window = Rayfield:CreateWindow({
     Theme = "DarkRed",
     DisableRayfieldPrompts = false,
     DisableBuildWarnings = false,
-	ToggleUIKeybind = "End", 
+	ToggleUIKeybind = "P", 
     ConfigurationSaving = {
         Enabled = true,
         FolderName = "Dogshitter",
@@ -593,50 +593,45 @@ local ImportInput = DataTab:CreateInput({
     end,
 })
 
--- Main game loop
-RunService.RenderStepped:Connect(function()
-    -- Auto-start replay on first note
-    if startReplayOnNote and selectedReplayName and not isReplaying then
-        for _, note in ipairs(notesContainer:GetChildren()) do
-            if note and (note:IsA("ImageLabel") or note:IsA("Frame")) then
-                local y = note.Position.Y.Scale
-                if y >= (hitLineTap - window) then
-                    playReplayByName(selectedReplayName)
-                    startReplayOnNote = false
-                    AutoStartReplayToggle:Set(false)
-                    break
-                end
-            end
-        end
-    end
+local lastTick = 0
+local PROCESS_INTERVAL = 1/120 -- 120 Hz max
+
+RunService.Heartbeat:Connect(function(dt)
+    lastTick = lastTick + dt
+    if lastTick < PROCESS_INTERVAL then return end
+    lastTick = 0
 
     if not autoplay then return end
-    local keysToPress = {}
+
+    local keysToTap = {}
+    local allNotes = notesContainer:GetChildren() -- get once per tick
 
     for _, lane in ipairs(lanes) do
         local toTap, holdPresent = false, false
-        for _, note in ipairs(notesContainer:GetChildren()) do
+
+        for _, note in ipairs(allNotes) do
             if note and (note:IsA("ImageLabel") or note:IsA("Frame")) then
                 local x = note.Position.X.Scale
                 local y = note.Position.Y.Scale
+
                 if math.abs(x - lane.pos) <= window then
                     if note:IsA("Frame") then
-                        if y >= (hitLineHold - window) then holdPresent = true end
+                        if y >= (hitLineHold - window) then
+                            holdPresent = true
+                        end
                     else
-                        local missRoll = (math.random() * 100) < missChancePercent
-                        if y >= (hitLineTap - window) and not missRoll then
+                        if y >= (hitLineTap - window) and math.random() * 100 >= missChancePercent then
                             toTap = true
-                            pcall(function() note:Destroy() end)
+                            pcall(note.Destroy, note)
                         end
                     end
                 end
             end
         end
 
-        -- Hold note logic
+        -- Handle hold notes
         if holdPresent and not lane.held and not lane.pending then
             lane.pending = task.spawn(function()
-                task.wait(0)
                 if holdExistsInLane(lane) then
                     lane.held = true
                     keyDown(lane.key)
@@ -653,34 +648,22 @@ RunService.RenderStepped:Connect(function()
             end
         end
 
-        if toTap then table.insert(keysToPress, lane.key) end
+        if toTap then
+            table.insert(keysToTap, lane.key)
+        end
     end
 
-    -- Process tap notes
-    if #keysToPress > 0 then
-        if recordOnFirstAuto and not isRecording then
-            isRecording = true
-            recordEvents = {}
-            recordStartTick = tick()
-            recordOnFirstAuto = false
-            Rayfield:Notify({
-                Title = "Auto-Recording Started",
-                Content = "Recording began with first autoplay!",
-                Duration = 2,
-                Image = 4483362458,
-            })
-        end
-
+    -- Handle tap notes
+    if #keysToTap > 0 then
         local timingOffset = (math.random() * 2 - 1) * timingOffsetMax
         local holdTime = math.random() * (holdMax - holdMin) + holdMin
 
         task.spawn(function()
             if timingOffset > 0 then task.wait(timingOffset) end
-            for _,k in ipairs(keysToPress) do recordEvent({ t = tick() - recordStartTick, type = "down", key = k.Name }) end
-            pressMultipleKeys(keysToPress, holdTime)
-            for _,k in ipairs(keysToPress) do recordEvent({ t = tick() - recordStartTick, type = "up", key = k.Name }) end
+            for _, k in ipairs(keysToTap) do recordEvent({ t = tick() - recordStartTick, type = "down", key = k.Name }) end
+            pressMultipleKeys(keysToTap, holdTime)
+            for _, k in ipairs(keysToTap) do recordEvent({ t = tick() - recordStartTick, type = "up", key = k.Name }) end
         end)
-        firstAutoPressOccurred = true
     end
 end)
 
