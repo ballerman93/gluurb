@@ -1,21 +1,27 @@
+-- Yes AI optimized this code can you shut the fuck up?
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local VIM = game:GetService("VirtualInputManager") -- like vim the text editor
+local VIM = game:GetService("VirtualInputManager")
 local HttpService = game:GetService("HttpService")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+-- Game-specific elements
 local notesContainer = playerGui
     :WaitForChild("ScreenGui")
     :WaitForChild("GAMEFRAME")
     :WaitForChild("YOU")
-    :WaitForChild("NotesContainer") -- i forgot how to so chatgpt gave this fucking family tree
+    :WaitForChild("NotesContainer")
 
--- runrunrun
+-- Hit line positions
 local hitLineTap = 0.85
 local hitLineHold = 0.85
 
+-- Lane configuration
 local lanes = {
     { pos = 0.197892383, key = Enum.KeyCode.S, held = false, pending = nil }, -- 1
     { pos = 0.401, key = Enum.KeyCode.D, held = false, pending = nil }, -- 2
@@ -23,287 +29,206 @@ local lanes = {
     { pos = 0.800066233, key = Enum.KeyCode.L, held = false, pending = nil }  -- 4
 }
 
---defaults
+-- Default values
 local windowMinDefault, windowMaxDefault = 0.01, 0.03
 local holdMinDefault, holdMaxDefault = 0.05, 0.15
 local timingOffsetMaxDefault = 0.02
 
+-- Variables
 local autoplay = false
 local window = (windowMinDefault + windowMaxDefault) / 2
 local holdMin, holdMax = holdMinDefault, holdMaxDefault
-local missChancePercent = 0 -- broken
+local missChancePercent = 0
 local timingOffsetMax = timingOffsetMaxDefault
 
--- recording
+-- Recording variables
 local isRecording = false
 local recordEvents = {}
 local recordStartTick = 0
 
-local replaysFolder = workspace:FindFirstChild("Sigmareplays")
-if not replaysFolder then
-    replaysFolder = Instance.new("Folder")
-    replaysFolder.Name = "Sigmareplays" -- sigma
-    replaysFolder.Parent = workspace
-end
-
+-- Replay variables (in-memory; persisted to disk when executor APIs available)
+local replays = {} -- map name -> JSON string
 local isReplaying = false
 local currentReplayTask = nil
 local selectedReplayName = nil
-
 local recordOnFirstAuto = false
 local startReplayOnNote = false
 local firstAutoPressOccurred = false
 
---vim help
+-- === Executor-friendly local save/load helpers ===
+
+-- Detect executor file APIs
+local has_writefile = type(writefile) == "function"
+local has_isfolder = type(isfolder) == "function"
+local has_makefolder = type(makefolder) == "function"
+local has_listfiles = type(listfiles) == "function"
+local has_readfile = type(readfile) == "function"
+local has_setclipboard = type(setclipboard) == "function"
+
+-- syn compatibility wrappers (common)
+if not has_writefile and type(syn) == "table" and type(syn.write_file) == "function" then
+    writefile = syn.write_file
+    has_writefile = true
+end
+if not has_readfile and type(syn) == "table" and type(syn.read_file) == "function" then
+    readfile = syn.read_file
+    has_readfile = true
+end
+if not has_listfiles and type(syn) == "table" and type(syn.list_files) == "function" then
+    listfiles = syn.list_files
+    has_listfiles = true
+end
+-- other wrappers (just in case)
+if not has_setclipboard and type(setclipboard) ~= "function" and type(syn) == "table" and type(syn.set_clipboard) == "function" then
+    setclipboard = syn.set_clipboard
+    has_setclipboard = true
+end
+
+local LOCAL_ROOT = "Dogshitter"
+local LOCAL_REPLAYS_DIR = LOCAL_ROOT .. "/Replays"
+
+local function ensureLocalReplayFolder()
+    if has_makefolder then
+        pcall(makefolder, LOCAL_ROOT)
+        pcall(makefolder, LOCAL_REPLAYS_DIR)
+    else
+        -- If no explicit makefolder, writefile may create the folder implicitly in some executors
+        return
+    end
+end
+
+local function writeLocalReplayFile(name, json)
+    if not has_writefile then return false, "no writefile" end
+    ensureLocalReplayFolder()
+    local safeName = tostring(name):gsub("[/%\\%:]", "_")
+    local filename = LOCAL_REPLAYS_DIR .. "/" .. safeName .. ".json"
+    local ok, err = pcall(function() writefile(filename, json) end)
+    return ok, err
+end
+
+local function readLocalReplayFile(name)
+    if not has_readfile then return nil, "no readfile" end
+    local safeName = tostring(name):gsub("[/%\\%:]", "_")
+    local filename = LOCAL_REPLAYS_DIR .. "/" .. safeName .. ".json"
+    local ok, content = pcall(function() return readfile(filename) end)
+    if ok then return content end
+    return nil, content
+end
+
+local function listLocalReplayFiles()
+    if not has_listfiles then return {} end
+    local ok, files = pcall(function() return listfiles(LOCAL_REPLAYS_DIR) end)
+    if not ok or type(files) ~= "table" then return {} end
+    local names = {}
+    for _, fpath in ipairs(files) do
+        if tostring(fpath):match("%.json$") then
+            local name = fpath:match("([^/\\]+)%.json$")
+            if name then table.insert(names, name) end
+        end
+    end
+    table.sort(names)
+    return names
+end
+
+-- Helper functions
 local function keyDown(key) pcall(function() VIM:SendKeyEvent(true, key, false, game) end) end
-local function keyUp(key)   pcall(function() VIM:SendKeyEvent(false, key, false, game) end) end
+local function keyUp(key) pcall(function() VIM:SendKeyEvent(false, key, false, game) end) end
 local function pressMultipleKeys(keys, holdTime)
     for _,k in ipairs(keys) do keyDown(k) end
     task.wait(holdTime)
     for _,k in ipairs(keys) do keyUp(k) end
 end
 
---ui help
-local function create(parent, class, props)
-    local obj = Instance.new(class)
-    if props then for k,v in pairs(props) do obj[k] = v end end
-    obj.Parent = parent
-    return obj
+local function recordEvent(ev)
+    if not isRecording then return end
+    table.insert(recordEvents, ev)
 end
 
-local function makeSlider(parent, labelText, min, max, initial, yPos)
-    local container = create(parent, "Frame", {
-        Size = UDim2.new(0, 280, 0, 36),
-        Position = UDim2.new(0, 8, 0, yPos or 0),
-        BackgroundTransparency = 1
-    })
-    create(container, "TextLabel", {
-        Size = UDim2.new(0.62, 0, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        BackgroundTransparency = 1,
-        Text = labelText,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Font = Enum.Font.Gotham,
-        TextSize = 12,
-        TextColor3 = Color3.new(1,1,1)
-    })
-    local valueLabel = create(container, "TextLabel", {
-        Size = UDim2.new(0.38, 0, 1, 0),
-        Position = UDim2.new(0.62, 0, 0, 0),
-        BackgroundTransparency = 1,
-        Text = tostring(initial),
-        TextXAlignment = Enum.TextXAlignment.Right,
-        Font = Enum.Font.Gotham,
-        TextSize = 12,
-        TextColor3 = Color3.new(1,1,1)
-    })
-    local bar = create(container, "Frame", {
-        Size = UDim2.new(1, 0, 0, 6),
-        Position = UDim2.new(0, 0, 1, -10),
-        BackgroundColor3 = Color3.fromRGB(60,60,60),
-    })
-    create(bar, "UICorner", { CornerRadius = UDim.new(0,4) })
-    local knob = create(bar, "Frame", {
-        Size = UDim2.new(0, 12, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        BackgroundColor3 = Color3.fromRGB(200,200,200)
-    })
-    create(knob, "UICorner", { CornerRadius = UDim.new(0,6) })
-
-    local function setFromInput(inputX)
-        local abs = bar.AbsolutePosition.X
-        local width = bar.AbsoluteSize.X
-        if width <= 0 then return end
-        local localX = math.clamp(inputX - abs, 0, width)
-        local newPct = localX / width
-        knob.Position = UDim2.new(newPct, -6, 0, 0)
-        local value = min + (max - min) * newPct
-        valueLabel.Text = string.format("%.4f", value)
-        bar:SetAttribute("sliderValue", value)
-        return value
-    end
-
-    local dragging = false
-    knob.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
-    end)
-    knob.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-    end)
-    bar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            setFromInput(input.Position.X)
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            setFromInput(input.Position.X)
-        end
-    end)
-
-    local function getValue()
-        local v = bar:GetAttribute("sliderValue")
-        if v then return math.clamp(v, min, max) end
-        return tonumber(valueLabel.Text) or initial
-    end
-    local function setValue(v)
-        v = math.clamp(v, min, max)
-        valueLabel.Text = string.format("%.4f", v)
-        local pct2 = (v - min) / (max - min)
-        knob.Position = UDim2.new(pct2, -6, 0, 0)
-        bar:SetAttribute("sliderValue", v)
-    end
-
-    setValue(initial)
-    return { getValue = getValue, setValue = setValue, container = container, valueLabel = valueLabel }
-end
-
-local screenGui = create(playerGui, "ScreenGui", { Name = "Autoplay", ResetOnSpawn = false })
-local main = create(screenGui, "Frame", {
-    Size = UDim2.new(0, 480, 0, 420),
-    Position = UDim2.new(0.02, 0, 0.12, 0),
-    BackgroundColor3 = Color3.fromRGB(28,28,28)
-})
-create(main, "UICorner", { CornerRadius = UDim.new(0,6) })
-local titleBar = create(main, "Frame", {
-    Size = UDim2.new(1, 0, 0, 34),
-    Position = UDim2.new(0,0,0,0),
-    BackgroundTransparency = 1
-})
-create(titleBar, "TextLabel", {
-    Size = UDim2.new(1,0,1,0),
-    BackgroundTransparency = 1,
-    Text = "DogshitterV0.11",
-    Font = Enum.Font.GothamBold,
-    TextSize = 16,
-    TextColor3 = Color3.new(1,1,1)
-})
-
-do
-    local dragging = false
-    local dragStart = nil
-    local startPos = nil
-    titleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = main.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-    titleBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
-            local delta = input.Position - dragStart
-            main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-end
-
-local btnArea = create(main, "Frame", { Size = UDim2.new(0, 480, 0, 40), Position = UDim2.new(0, 8, 0, 42), BackgroundTransparency = 1 })
-local btnAuto = create(btnArea, "TextButton", { Size = UDim2.new(0, 120, 1, 0), Position = UDim2.new(0,0,0,0), Text = "Autoplay: OFF", Font = Enum.Font.GothamSemibold, TextSize = 11 })
-local btnAutoRec = create(btnArea, "TextButton", { Size = UDim2.new(0, 120, 1, 0), Position = UDim2.new(0, 125, 0, 0), Text = "Auto+Rec: OFF", Font = Enum.Font.GothamSemibold, TextSize = 11 })
-local btnKill = create(btnArea, "TextButton", { Size = UDim2.new(0, 214, 1, 0), Position = UDim2.new(0, 250, 0, 0), Text = "Kill", Font = Enum.Font.Gotham, TextSize = 11 })
-
---sleider
-local sWindow = makeSlider(main, "Hit window center", 0.000, 0.1, (windowMinDefault + windowMaxDefault)/2, 100)
-local sHold   = makeSlider(main, "Tap hold time", 0.00, 0.3, (holdMinDefault + holdMaxDefault)/2, 148)
-local sMiss   = makeSlider(main, "Miss chance", 0, 99, 0, 196)
-local sTiming = makeSlider(main, "Max timing offset", 0, 0.1, timingOffsetMaxDefault, 244)
-
-local replayFrame = create(main, "Frame", {
-    Size = UDim2.new(0, 180, 0, 260),
-    Position = UDim2.new(0, 292, 0, 86),
-    BackgroundColor3 = Color3.fromRGB(36,36,36)
-})
-create(replayFrame, "UICorner", { CornerRadius = UDim.new(0,6) })
-create(replayFrame, "TextLabel", { Size = UDim2.new(1, -12, 0, 18), Position = UDim2.new(0, 6, 0, 6), BackgroundTransparency = 1, Text = "Replays", Font = Enum.Font.GothamBold, TextSize = 12, TextColor3 = Color3.new(1,1,1), TextXAlignment = Enum.TextXAlignment.Left })
-
-local replayList = create(replayFrame, "ScrollingFrame", {
-    Size = UDim2.new(1, -12, 1, -30),
-    Position = UDim2.new(0,6,0,30),
-    CanvasSize = UDim2.new(0,0,0,0),
-    ScrollBarThickness = 6,
-    BackgroundTransparency = 1
-})
-local replayLayout = create(replayList, "UIListLayout", { Padding = UDim.new(0,4) })
-
-local btnRefreshReplays = create(replayFrame, "TextButton", { Size = UDim2.new(1, -12, 0, 20), Position = UDim2.new(0,6,1,-26), Text = "Refresh", Font = Enum.Font.Gotham, TextSize = 11 })
-
-local exportBtn = create(main, "TextButton", { Size = UDim2.new(0, 80, 0, 24), Position = UDim2.new(0, 10, 0, 320), Text = "Show JSON", Font = Enum.Font.Gotham, TextSize = 11 })
-local importBox = create(main, "TextBox", { Size = UDim2.new(0, 140, 0, 24), Position = UDim2.new(0, 95, 0, 320), Text = "", Font = Enum.Font.Gotham, TextSize = 11, ClearTextOnFocus = false })
-local importBtn = create(main, "TextButton", { Size = UDim2.new(0, 50, 0, 24), Position = UDim2.new(0, 240, 0, 320), Text = "Import", Font = Enum.Font.Gotham, TextSize = 11 })
-
-local btnRecord = create(main, "TextButton", { Size = UDim2.new(0, 85, 0, 24), Position = UDim2.new(0, 10, 0, 350), Text = "Start Rec", Font = Enum.Font.Gotham, TextSize = 11 })
-local btnStopRec = create(main, "TextButton", { Size = UDim2.new(0, 75, 0, 24), Position = UDim2.new(0, 100, 0, 350), Text = "Stop Rec", Font = Enum.Font.Gotham, TextSize = 11 })
-local btnStartReplay = create(main, "TextButton", { Size = UDim2.new(0, 85, 0, 24), Position = UDim2.new(0, 180, 0, 350), Text = "Start Replay", Font = Enum.Font.Gotham, TextSize = 11 })
-local btnStopReplay = create(main, "TextButton", { Size = UDim2.new(0, 201, 0, 24), Position = UDim2.new(0, 270, 0, 350), Text = "Stop Replay", Font = Enum.Font.Gotham, TextSize = 11 })
-
-local startReplayOnNoteBtn = create(main, "TextButton", { Size = UDim2.new(0, 461, 0, 22), Position = UDim2.new(0, 10, 0, 378), Text = "Start replay automatically on first note: OFF", Font = Enum.Font.Gotham, TextSize = 11 })
-
-local function refreshReplayList()
-    for _,c in ipairs(replayList:GetChildren()) do
-        if not c:IsA("UIListLayout") then c:Destroy() end
-    end
-    local names = {}
-    for _,v in ipairs(replaysFolder:GetChildren()) do
-        if v:IsA("StringValue") then table.insert(names, v.Name) end
-    end
-    table.sort(names)
-    for i,name in ipairs(names) do
-        local btn = create(replayList, "TextButton", {
-            Size = UDim2.new(1, 0, 0, 24),
-            Text = name,
-            Font = Enum.Font.Gotham,
-            TextSize = 12,
-            BackgroundColor3 = Color3.fromRGB(48,48,48),
-            TextColor3 = Color3.new(1,1,1)
-        })
-        btn.MouseButton1Click:Connect(function()
-            selectedReplayName = name
-            for _,child in ipairs(replayList:GetChildren()) do
-                if child:IsA("TextButton") then child.BackgroundColor3 = Color3.fromRGB(48,48,48) end
+local function holdExistsInLane(lane)
+    for _, note in ipairs(notesContainer:GetChildren()) do
+        if note and note:IsA("Frame") then
+            local x = note.Position.X.Scale
+            local y = note.Position.Y.Scale
+            if math.abs(x - lane.pos) <= window and y >= (hitLineHold - window) then
+                return true
             end
-            btn.BackgroundColor3 = Color3.fromRGB(80,120,200)
-        end)
-        if i == #names then
-            selectedReplayName = name
-            btn.BackgroundColor3 = Color3.fromRGB(80,120,200)
         end
     end
-    local layout = replayList:FindFirstChildOfClass("UIListLayout")
-    if layout then
-        replayList.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 8)
-    end
+    return false
 end
-refreshReplayList()
 
---save
+-- Save replay (stores in-memory and attempts to persist to disk)
 local function saveReplay(name, events)
     if not name or name == "" then name = "Replay_"..os.time() end
     local json = HttpService:JSONEncode(events)
-    local existing = replaysFolder:FindFirstChild(name)
-    if existing and existing:IsA("StringValue") then
-        existing.Value = json
+
+    -- Save into in-memory table
+    replays[name] = json
+
+    -- Try to write to local disk (executor)
+    local wrote, writeErr = writeLocalReplayFile(name, json)
+    if wrote then
+        if Rayfield and Rayfield.Notify then
+            Rayfield:Notify({
+                Title = "Replay Saved Locally",
+                Content = "Saved to: " .. LOCAL_REPLAYS_DIR .. "/" .. name .. ".json",
+                Duration = 3,
+                Image = 4483362458,
+            })
+        end
     else
-        local sv = Instance.new("StringValue")
-        sv.Name = name
-        sv.Value = json
-        sv.Parent = replaysFolder
+        -- fallback: copy to clipboard if available
+        if typeof(setclipboard) == "function" then
+            pcall(setclipboard, json)
+            if Rayfield and Rayfield.Notify then
+                Rayfield:Notify({
+                    Title = "Replay Copied",
+                    Content = "No writefile available — JSON copied to clipboard instead.",
+                    Duration = 3,
+                    Image = 4483362458,
+                })
+            end
+        else
+            -- final fallback: print to console
+            print("Saved replay (in-memory):", name)
+            print(json)
+            if Rayfield and Rayfield.Notify then
+                Rayfield:Notify({
+                    Title = "Replay Saved (Memory)",
+                    Content = "Could not write to disk or clipboard. Check console for JSON.",
+                    Duration = 4,
+                    Image = 4483362458,
+                })
+            end
+        end
     end
-    refreshReplayList()
+
+    -- Refresh UI dropdown if exists
+    if ReplayDropdown and ReplayDropdown.Refresh then
+        local names = {}
+        for n,_ in pairs(replays) do table.insert(names, n) end
+        table.sort(names)
+        ReplayDropdown:Refresh(names, true)
+    end
 end
 
---cry
+-- Play replay by name (reads from in-memory table or tries to read local file)
 local function playReplayByName(name)
     if isReplaying then return end
-    local item = replaysFolder:FindFirstChild(name)
-    if not item or not item:IsA("StringValue") then return end
-    local ok, events = pcall(function() return HttpService:JSONDecode(item.Value) end)
+    if not name or name == "" then return end
+
+    local json = replays[name]
+    if not json then
+        local okContent, contentOrErr = pcall(function() return readLocalReplayFile(name) end)
+        if okContent and contentOrErr then
+            json = contentOrErr
+            replays[name] = json -- cache into memory for future
+        end
+    end
+
+    if not json then return end
+
+    local ok, events = pcall(function() return HttpService:JSONDecode(json) end)
     if not ok or type(events) ~= "table" then return end
 
     isReplaying = true
@@ -327,169 +252,349 @@ local function playReplayByName(name)
     end)
 end
 
---logitech
-btnAuto.MouseButton1Click:Connect(function()
-    autoplay = not autoplay
-    btnAuto.Text = autoplay and "Autoplay: ON" or "Autoplay: OFF"
-    if autoplay then firstAutoPressOccurred = false end
-    if not autoplay then
-        for _,l in ipairs(lanes) do
-            if l.held then keyUp(l.key); l.held = false end
-            l.pending = nil
-        end
-    end
-end)
-
-local autoRecActive = false
-btnAutoRec.MouseButton1Click:Connect(function()
-    autoRecActive = not autoRecActive
-    if autoRecActive then
-        autoplay = true
-        recordOnFirstAuto = true
-        btnAuto.Text = "Autoplay: ON"
-        btnAutoRec.Text = "Auto+Rec: ON"
-        firstAutoPressOccurred = false
-    else
-        autoplay = false
-        recordOnFirstAuto = false
-        btnAuto.Text = "Autoplay: OFF"
-        btnAutoRec.Text = "Auto+Rec: OFF"
-        for _,l in ipairs(lanes) do
-            if l.held then keyUp(l.key); l.held = false end
-            l.pending = nil
-        end
-    end
-end)
-
-btnKill.MouseButton1Click:Connect(function() screenGui:Destroy() end)
-
-btnRecord.MouseButton1Click:Connect(function()
-    if isRecording then return end
-    isRecording = true
-    recordEvents = {}
-    recordStartTick = tick()
-    btnRecord.Text = "Rec: ON"
-end)
-
-btnStopRec.MouseButton1Click:Connect(function()
-    if not isRecording then return end
-    isRecording = false
-    btnRecord.Text = "Start Rec"
-    local namePrompt = create(screenGui, "Frame", {
-        Size = UDim2.new(0, 320, 0, 120),
-        Position = UDim2.new(0.5, -160, 0.5, -60),
-        BackgroundColor3 = Color3.fromRGB(40,40,40)
-    })
-    create(namePrompt, "UICorner", { CornerRadius = UDim.new(0,6) })
-    create(namePrompt, "TextLabel", {
-        Size = UDim2.new(1, -20, 0, 28),
-        Position = UDim2.new(0, 10, 0, 8),
-        BackgroundTransparency = 1,
-        Text = "Name this replay:",
-        Font = Enum.Font.Gotham,
-        TextSize = 16,
-        TextColor3 = Color3.fromRGB(255,255,255)
-    })
-    local input = create(namePrompt, "TextBox", {
-        Size = UDim2.new(1, -20, 0, 30),
-        Position = UDim2.new(0, 10, 0, 42),
-        Text = "Replay_"..os.time(),
-        Font = Enum.Font.Gotham,
-        TextSize = 14
-    })
-    local btnSave = create(namePrompt, "TextButton", { Size = UDim2.new(0, 120, 0, 28), Position = UDim2.new(0.5, -60, 1, -36), Text = "Save" })
-    local btnCancel = create(namePrompt, "TextButton", { Size = UDim2.new(0, 80, 0, 28), Position = UDim2.new(0.5, 66, 1, -36), Text = "Cancel" })
-
-    btnSave.MouseButton1Click:Connect(function()
-        local name = tostring(input.Text):gsub("[%c%/%\\%:%%%*%?%\"%<%>%|]", "_")
-        saveReplay(name, recordEvents)
-        namePrompt:Destroy()
-    end)
-    btnCancel.MouseButton1Click:Connect(function() namePrompt:Destroy() end)
-end)
-
-btnRefreshReplays.MouseButton1Click:Connect(refreshReplayList)
-
-btnStartReplay.MouseButton1Click:Connect(function()
-    if not selectedReplayName then return end
-    playReplayByName(selectedReplayName)
-end)
-btnStopReplay.MouseButton1Click:Connect(function()
-    isReplaying = false
-    currentReplayTask = nil
-end)
-
-startReplayOnNoteBtn.MouseButton1Click:Connect(function()
-    startReplayOnNote = not startReplayOnNote
-    startReplayOnNoteBtn.Text = "Start replay automatically on first note: " .. (startReplayOnNote and "ON" or "OFF")
-end)
-
--- export popup
-exportBtn.MouseButton1Click:Connect(function()
-    if not selectedReplayName then return end
-    local item = replaysFolder:FindFirstChild(selectedReplayName)
-    if not item then return end
-    local json = item.Value or ""
-    local popup = create(screenGui, "Frame", {
-        Size = UDim2.new(0, 560, 0, 300),
-        Position = UDim2.new(0.5, -280, 0.5, -150),
-        BackgroundColor3 = Color3.fromRGB(30,30,30)
-    })
-    create(popup, "UICorner", { CornerRadius = UDim.new(0,6) })
-    create(popup, "TextLabel", { Size = UDim2.new(1, -20, 0, 28), Position = UDim2.new(0,10,0,8), BackgroundTransparency = 1,
-        Text = "blehhh:", Font = Enum.Font.Gotham, TextSize = 16, TextColor3 = Color3.new(1,1,1) })
-    local box = create(popup, "TextBox", { Size = UDim2.new(1, -20, 1, -80), Position = UDim2.new(0,10,0,40), Text = json, ClearTextOnFocus = false, MultiLine = true, Font = Enum.Font.Gotham, TextSize = 12 })
-    local btnClose = create(popup, "TextButton", { Size = UDim2.new(0, 80, 0, 28), Position = UDim2.new(1, -90, 1, -36), Text = "Close" })
-    btnClose.MouseButton1Click:Connect(function() popup:Destroy() end)
-    box:CaptureFocus()
-end)
-
--- import
-importBtn.MouseButton1Click:Connect(function()
-    local text = tostring(importBox.Text or ""):gsub("^%s+", ""):gsub("%s+$", "")
-    if text == "" then return end
-    local ok, parsed = pcall(function() return HttpService:JSONDecode(text) end)
-    if not ok or type(parsed) ~= "table" then
-        local p = create(screenGui, "TextLabel", { Size = UDim2.new(0, 260, 0, 36), Position = UDim2.new(0.5, -130, 0.5, -20), BackgroundColor3 = Color3.fromRGB(180,60,60), Text = "Invalid JSON", TextColor3 = Color3.new(1,1,1), Font = Enum.Font.Gotham })
-        task.delay(1.2, function() p:Destroy() end)
-        return
-    end
-    local defaultName = "Imported_"..os.time()
-    saveReplay(defaultName, parsed)
-    importBox.Text = ""
-end)
-
-local function recordEvent(ev)
-    if not isRecording then return end
-    table.insert(recordEvents, ev)
+local function getReplayNames()
+    local names = {}
+    for name,_ in pairs(replays) do table.insert(names, name) end
+    table.sort(names)
+    return names
 end
 
-local function holdExistsInLane(lane)
-    for _, note in ipairs(notesContainer:GetChildren()) do
-        if note and note:IsA("Frame") then
-            local x = note.Position.X.Scale
-            local y = note.Position.Y.Scale
-            if math.abs(x - lane.pos) <= window and y >= (hitLineHold - window) then
-                return true
+-- Create Rayfield Window
+local Window = Rayfield:CreateWindow({
+    Name = "DogshitterV0.12",
+    LoadingTitle = "Loading malware...",
+    LoadingSubtitle = "by Your Mom",
+    Theme = "DarkBlue",
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "Dogshitter",
+        FileName = "Config"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "noinvitelink",
+        RememberJoins = true
+    },
+    KeySystem = false
+})
+
+-- Main Tab
+local MainTab = Window:CreateTab("Main", 4483362458)
+
+-- Autoplay Section
+local AutoplaySection = MainTab:CreateSection("Autoplay Controls")
+
+local AutoplayToggle = MainTab:CreateToggle({
+    Name = "Enable Autoplay",
+    CurrentValue = false,
+    Flag = "AutoplayToggle",
+    Callback = function(Value)
+        autoplay = Value
+        if autoplay then firstAutoPressOccurred = false end
+        if not autoplay then
+            for _,l in ipairs(lanes) do
+                if l.held then keyUp(l.key); l.held = false end
+                l.pending = nil
+            end
+        end
+    end,
+})
+
+local AutoRecToggle = MainTab:CreateToggle({
+    Name = "Auto + Record Mode",
+    CurrentValue = false,
+    Flag = "AutoRecToggle",
+    Callback = function(Value)
+        if Value then
+            autoplay = true
+            recordOnFirstAuto = true
+            AutoplayToggle:Set(true)
+            firstAutoPressOccurred = false
+        else
+            autoplay = false
+            recordOnFirstAuto = false
+            AutoplayToggle:Set(false)
+            for _,l in ipairs(lanes) do
+                if l.held then keyUp(l.key); l.held = false end
+                l.pending = nil
+            end
+        end
+    end,
+})
+
+-- Settings Section
+local SettingsSection = MainTab:CreateSection("Autoplay Settings")
+
+local WindowSlider = MainTab:CreateSlider({
+    Name = "Hit Window Center",
+    Range = {0, 0.1},
+    Increment = 0.0001,
+    Suffix = "s",
+    CurrentValue = (windowMinDefault + windowMaxDefault) / 2,
+    Flag = "WindowSlider",
+    Callback = function(Value)
+        window = math.clamp(Value, 0.001, 0.2)
+    end,
+})
+
+local HoldSlider = MainTab:CreateSlider({
+    Name = "Tap Hold Time",
+    Range = {0, 0.3},
+    Increment = 0.001,
+    Suffix = "s",
+    CurrentValue = (holdMinDefault + holdMaxDefault) / 2,
+    Flag = "HoldSlider",
+    Callback = function(Value)
+        holdMin = math.clamp(Value - 0.02, 0.01, 1)
+        holdMax = math.clamp(Value + 0.02, 0.01, 2)
+    end,
+})
+
+local MissSlider = MainTab:CreateSlider({
+    Name = "Miss Chance",
+    Range = {0, 99},
+    Increment = 1,
+    Suffix = "%",
+    CurrentValue = 0,
+    Flag = "MissSlider",
+    Callback = function(Value)
+        missChancePercent = math.clamp(Value, 0, 100)
+    end,
+})
+
+local TimingSlider = MainTab:CreateSlider({
+    Name = "Max Timing Offset",
+    Range = {0, 0.1},
+    Increment = 0.001,
+    Suffix = "s",
+    CurrentValue = timingOffsetMaxDefault,
+    Flag = "TimingSlider",
+    Callback = function(Value)
+        timingOffsetMax = math.clamp(Value, 0, 0.2)
+    end,
+})
+
+-- Recording Tab
+local RecordingTab = Window:CreateTab("Recording", 4483362458)
+
+local RecordingSection = RecordingTab:CreateSection("Recording Controls")
+
+local StartRecordButton = RecordingTab:CreateButton({
+    Name = "Start Recording",
+    Callback = function()
+        if isRecording then return end
+        isRecording = true
+        recordEvents = {}
+        recordStartTick = tick()
+        Rayfield:Notify({
+            Title = "Recording Started",
+            Content = "Recording has begun!",
+            Duration = 2,
+            Image = 4483362458,
+        })
+    end,
+})
+
+local StopRecordButton = RecordingTab:CreateButton({
+    Name = "Stop Recording & Save",
+    Callback = function()
+        if not isRecording then return end
+        isRecording = false
+
+        -- Create save prompt
+        local replayName = "Replay_" .. os.time()
+        saveReplay(replayName, recordEvents)
+
+        Rayfield:Notify({
+            Title = "Recording Saved",
+            Content = "Replay saved as: " .. replayName,
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end,
+})
+
+-- Replay Tab
+local ReplayTab = Window:CreateTab("Replays", 4483362458)
+
+local ReplaySection = ReplayTab:CreateSection("Replay Controls")
+
+local ReplayDropdown = ReplayTab:CreateDropdown({
+    Name = "Select Replay",
+    Options = getReplayNames(),
+    CurrentOption = {},
+    MultipleOptions = false,
+    Flag = "ReplayDropdown",
+    Callback = function(Option)
+        selectedReplayName = Option[1] or Option
+    end,
+})
+
+local function reloadReplaysFromDisk()
+    if has_listfiles and has_readfile then
+        local localNames = listLocalReplayFiles()
+        for _, name in ipairs(localNames) do
+            if not replays[name] then -- don’t overwrite if already loaded
+                local ok, content = pcall(function() return readLocalReplayFile(name) end)
+                if ok and content then
+                    replays[name] = content
+                end
             end
         end
     end
-    return false
 end
 
+-- Update your RefreshReplaysButton:
+local RefreshReplaysButton = ReplayTab:CreateButton({
+    Name = "Refresh Replay List",
+    Callback = function()
+        -- reload from disk every time you refresh
+        reloadReplaysFromDisk()
+
+        local names = getReplayNames()
+        ReplayDropdown:Refresh(names, true)
+
+        Rayfield:Notify({
+            Title = "Replays Refreshed",
+            Content = "Found " .. #names .. " replays",
+            Duration = 2,
+            Image = 4483362458,
+        })
+    end,
+})
+
+local StartReplayButton = ReplayTab:CreateButton({
+    Name = "Start Replay",
+    Callback = function()
+        if not selectedReplayName then
+            Rayfield:Notify({
+                Title = "No Replay Selected",
+                Content = "Please select a replay first!",
+                Duration = 3,
+                Image = 4483362458,
+            })
+            return
+        end
+        playReplayByName(selectedReplayName)
+        Rayfield:Notify({
+            Title = "Replay Started",
+            Content = "Playing: " .. selectedReplayName,
+            Duration = 2,
+            Image = 4483362458,
+        })
+    end,
+})
+
+local StopReplayButton = ReplayTab:CreateButton({
+    Name = "Stop Replay",
+    Callback = function()
+        isReplaying = false
+        currentReplayTask = nil
+        Rayfield:Notify({
+            Title = "Replay Stopped",
+            Content = "Replay has been stopped",
+            Duration = 2,
+            Image = 4483362458,
+        })
+    end,
+})
+
+local AutoStartReplayToggle = ReplayTab:CreateToggle({
+    Name = "Auto-start Replay on First Note",
+    CurrentValue = false,
+    Flag = "AutoStartReplayToggle",
+    Callback = function(Value)
+        startReplayOnNote = Value
+    end,
+})
+
+-- Import/Export Tab
+local DataTab = Window:CreateTab("Data", 4483362458)
+
+local DataSection = DataTab:CreateSection("Import/Export")
+
+local ExportButton = DataTab:CreateButton({
+    Name = "Copy Selected Replay String",
+    Callback = function()
+        if not selectedReplayName then
+            Rayfield:Notify({
+                Title = "No Replay Selected",
+                Content = "Please select a replay first!",
+                Duration = 3,
+                Image = 4483362458,
+            })
+            return
+        end
+
+        local json = replays[selectedReplayName]
+        if not json then
+            -- try read local file
+            local ok, content = pcall(function() return readLocalReplayFile(selectedReplayName) end)
+            if ok and content then json = content end
+        end
+
+        if not json then return end
+
+        -- Copy to clipboard if possible, otherwise show notification
+        if has_setclipboard then
+            pcall(setclipboard, json)
+            Rayfield:Notify({
+                Title = "JSON Copied",
+                Content = "Replay JSON copied to clipboard!",
+                Duration = 3,
+                Image = 4483362458,
+            })
+        else
+            print("Replay JSON:", json) -- Fallback to console
+            Rayfield:Notify({
+                Title = "JSON Exported",
+                Content = "Check console for JSON data",
+                Duration = 3,
+                Image = 4483362458,
+            })
+        end
+    end,
+})
+
+local ImportInput = DataTab:CreateInput({
+    Name = "Import Replay With String",
+    PlaceholderText = "Paste replay string here...",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(Text)
+        if Text == "" then return end
+
+        local ok, parsed = pcall(function() return HttpService:JSONDecode(Text) end)
+        if not ok or type(parsed) ~= "table" then
+            Rayfield:Notify({
+                Title = "Import Failed",
+                Content = "Invalid JSON format!",
+                Duration = 3,
+                Image = 4483362458,
+            })
+            return
+        end
+
+        local defaultName = "Imported_" .. os.time()
+        saveReplay(defaultName, parsed)
+
+        -- Refresh the dropdown
+        local names = getReplayNames()
+        ReplayDropdown:Refresh(names, true)
+
+        Rayfield:Notify({
+            Title = "Import Successful",
+            Content = "Replay imported as: " .. defaultName,
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end,
+})
+
+-- Main game loop
 RunService.RenderStepped:Connect(function()
-    local sValWindow = sWindow.getValue()
-    local sValHold = sHold.getValue()
-    local sValMiss = sMiss.getValue()
-    local sValTiming = sTiming.getValue()
-
-    window = math.clamp(sValWindow, 0.001, 0.2)
-    holdMin = math.clamp(sValHold - 0.02, 0.01, 1)
-    holdMax = math.clamp(sValHold + 0.02, 0.01, 2)
-    missChancePercent = math.clamp(sValMiss, 0, 100)
-    timingOffsetMax = math.clamp(sValTiming, 0, 0.2)
-
---
+    -- Auto-start replay on first note
     if startReplayOnNote and selectedReplayName and not isReplaying then
         for _, note in ipairs(notesContainer:GetChildren()) do
             if note and (note:IsA("ImageLabel") or note:IsA("Frame")) then
@@ -497,7 +602,7 @@ RunService.RenderStepped:Connect(function()
                 if y >= (hitLineTap - window) then
                     playReplayByName(selectedReplayName)
                     startReplayOnNote = false
-                    startReplayOnNoteBtn.Text = "Start selected replay on note: OFF"
+                    AutoStartReplayToggle:Set(false)
                     break
                 end
             end
@@ -527,35 +632,7 @@ RunService.RenderStepped:Connect(function()
             end
         end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        -- Hold note logic
         if holdPresent and not lane.held and not lane.pending then
             lane.pending = task.spawn(function()
                 task.wait(0.1)
@@ -578,16 +655,24 @@ RunService.RenderStepped:Connect(function()
         if toTap then table.insert(keysToPress, lane.key) end
     end
 
+    -- Process tap notes
     if #keysToPress > 0 then
         if recordOnFirstAuto and not isRecording then
             isRecording = true
             recordEvents = {}
             recordStartTick = tick()
-            btnRecord.Text = "Rec: ON"
             recordOnFirstAuto = false
+            Rayfield:Notify({
+                Title = "Auto-Recording Started",
+                Content = "Recording began with first autoplay!",
+                Duration = 2,
+                Image = 4483362458,
+            })
         end
+
         local timingOffset = (math.random() * 2 - 1) * timingOffsetMax
         local holdTime = math.random() * (holdMax - holdMin) + holdMin
+
         task.spawn(function()
             if timingOffset > 0 then task.wait(timingOffset) end
             for _,k in ipairs(keysToPress) do recordEvent({ t = tick() - recordStartTick, type = "down", key = k.Name }) end
@@ -597,4 +682,25 @@ RunService.RenderStepped:Connect(function()
         firstAutoPressOccurred = true
     end
 end)
-refreshReplayList()
+
+-- Initial load: try to read local files into memory and refresh dropdown
+task.spawn(function()
+    task.wait(1) -- Wait for UI to load
+
+    -- Load local files into replays table
+    if has_listfiles and has_readfile then
+        local localNames = listLocalReplayFiles()
+        for _, name in ipairs(localNames) do
+            local ok, content = pcall(function() return readLocalReplayFile(name) end)
+            if ok and content then
+                replays[name] = content
+            end
+        end
+    end
+
+    -- Refresh the dropdown now that replays are loaded
+    local names = getReplayNames()
+    if ReplayDropdown and ReplayDropdown.Refresh then
+        ReplayDropdown:Refresh(names, true)
+    end
+end)
