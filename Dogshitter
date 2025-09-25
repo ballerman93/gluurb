@@ -267,6 +267,7 @@ local Window = Rayfield:CreateWindow({
     Theme = "DarkRed",
     DisableRayfieldPrompts = false,
     DisableBuildWarnings = false,
+	ToggleUIKeybind = "End", 
     ConfigurationSaving = {
         Enabled = true,
         FolderName = "Dogshitter",
