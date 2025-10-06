@@ -367,7 +367,7 @@ local MissSlider = MainTab:CreateSlider({
 
 local TimingSlider = MainTab:CreateSlider({
     Name = "Max Timing Offset",
-    Range = {0, 0.1},
+    Range = {0, 0.5},
     Increment = 0.001,
     Suffix = "s",
     CurrentValue = timingOffsetMaxDefault,
