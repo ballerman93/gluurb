@@ -1,3 +1,4 @@
+-- loadstring(game:HttpGet('https://raw.githubusercontent.com/ballerman93/gluurb/refs/heads/main/GooberGUI'))()
 -- this script is NOT compiled with moonsec v3 or whatever the fuck its named i forgot hi hi hi hi hi hi hi hih ihtjihtgejihetijherijgwrejiwe
 -- FUCK THIS STUPID FUCKING HALLOWEEN UPDATE STOP CHANGING THE RIG LOCATION
 local rig = workspace:WaitForChild('Pumpkins'):WaitForChild('Rig') -- Rig
