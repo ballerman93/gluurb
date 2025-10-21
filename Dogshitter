@@ -1,3 +1,4 @@
+-- loadstring(game:HttpGet('https://raw.githubusercontent.com/ballerman93/gluurb/refs/heads/main/Dogshitter'))()
 -- Yes AI optimized this code can you shut the fuck up?
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
