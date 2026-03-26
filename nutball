@@ -1,14 +1,22 @@
+--slop
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
+local CoreGui = game:GetService("CoreGui")
 
 local player = Players.LocalPlayer
 local collecting = false
 local originalCFrame = nil
 local collectThread = nil
 
+local function getCharacter()
+	return player.Character or player.CharacterAdded:Wait()
+end
+
+-- UI (CoreGui + persist)
 local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+screenGui.Parent = CoreGui
 
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 140, 0, 60)
@@ -23,12 +31,21 @@ titleBar.Text = "nutball generator"
 titleBar.TextScaled = true
 titleBar.Parent = frame
 
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(1, 0, 1, -20)
-button.Position = UDim2.new(0, 0, 0, 20)
-button.Text = "OFF"
-button.Parent = frame
+-- LEFT BUTTON (toggle)
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0.5, 0, 1, -20)
+toggleButton.Position = UDim2.new(0, 0, 0, 20)
+toggleButton.Text = "OFF"
+toggleButton.Parent = frame
 
+-- RIGHT BUTTON (delete GUI)
+local deleteButton = Instance.new("TextButton")
+deleteButton.Size = UDim2.new(0.5, 0, 1, -20)
+deleteButton.Position = UDim2.new(0.5, 0, 0, 20)
+deleteButton.Text = "X"
+deleteButton.Parent = frame
+
+-- Dragging (title bar only)
 local dragging = false
 local dragStart, startPos
 
@@ -60,6 +77,7 @@ titleBar.InputChanged:Connect(function(input)
 	end
 end)
 
+-- Auto interact
 local function autoInteract()
 	local char = player.Character
 	if not char then return end
@@ -85,22 +103,22 @@ local function autoInteract()
 	end
 end
 
+-- Toggle collect
 local function toggleCollect()
 	collecting = not collecting
 
-	local char = player.Character
-	if not char or not char:FindFirstChild("HumanoidRootPart") then
+	local char = getCharacter()
+	local root = char:FindFirstChild("HumanoidRootPart")
+	if not root then
 		collecting = false
 		return
 	end
-
-	local root = char.HumanoidRootPart
 
 	if collecting then
 		originalCFrame = root.CFrame
 		root.CFrame = CFrame.new(-726, 36, 1113)
 
-		button.Text = "ON"
+		toggleButton.Text = "ON"
 
 		collectThread = task.spawn(function()
 			while collecting do
@@ -117,15 +135,34 @@ local function toggleCollect()
 			root.CFrame = originalCFrame
 		end
 
-		button.Text = "OFF"
+		toggleButton.Text = "OFF"
 	end
 end
 
-button.MouseButton1Click:Connect(toggleCollect)
+-- Button connections
+toggleButton.MouseButton1Click:Connect(toggleCollect)
 
+deleteButton.MouseButton1Click:Connect(function()
+	collecting = false
+	if collectThread then
+		task.cancel(collectThread)
+	end
+	screenGui:Destroy()
+end)
+
+-- G hotkey
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 	if input.KeyCode == Enum.KeyCode.G then
 		toggleCollect()
 	end
+end)
+
+-- Handle respawn cleanly
+player.CharacterAdded:Connect(function()
+	collecting = false
+	if collectThread then
+		task.cancel(collectThread)
+	end
+	toggleButton.Text = "OFF"
 end)
