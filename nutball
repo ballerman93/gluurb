@@ -1,0 +1,131 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+
+local player = Players.LocalPlayer
+local collecting = false
+local originalCFrame = nil
+local collectThread = nil
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 140, 0, 60)
+frame.Position = UDim2.new(0.5, -70, 0.5, -30)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.Parent = screenGui
+
+local titleBar = Instance.new("TextLabel")
+titleBar.Size = UDim2.new(1, 0, 0, 20)
+titleBar.BackgroundColor3 = Color3.fromRGB(255,255,67)
+titleBar.Text = "nutball generator"
+titleBar.TextScaled = true
+titleBar.Parent = frame
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(1, 0, 1, -20)
+button.Position = UDim2.new(0, 0, 0, 20)
+button.Text = "OFF"
+button.Parent = frame
+
+local dragging = false
+local dragStart, startPos
+
+titleBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+titleBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		if dragging then
+			frame.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end
+end)
+
+local function autoInteract()
+	local char = player.Character
+	if not char then return end
+	local root = char:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+
+	for _, obj in ipairs(workspace:GetDescendants()) do
+		if obj:IsA("ProximityPrompt") and obj.Enabled then
+			local parentPart = obj.Parent
+			if parentPart and (parentPart:IsA("BasePart") or (parentPart:IsA("Attachment") and parentPart.Parent:IsA("BasePart"))) then
+				local actualPart = parentPart:IsA("Attachment") and parentPart.Parent or parentPart
+				local distance = (actualPart.Position - root.Position).Magnitude
+
+				if distance <= (obj.MaxActivationDistance or 10) + 6 then
+					pcall(function()
+						fireproximityprompt(obj, 1)
+					end)
+					task.wait(0)
+					return
+				end
+			end
+		end
+	end
+end
+
+local function toggleCollect()
+	collecting = not collecting
+
+	local char = player.Character
+	if not char or not char:FindFirstChild("HumanoidRootPart") then
+		collecting = false
+		return
+	end
+
+	local root = char.HumanoidRootPart
+
+	if collecting then
+		originalCFrame = root.CFrame
+		root.CFrame = CFrame.new(-726, 36, 1113)
+
+		button.Text = "ON"
+
+		collectThread = task.spawn(function()
+			while collecting do
+				autoInteract()
+				task.wait(0)
+			end
+		end)
+	else
+		if collectThread then
+			task.cancel(collectThread)
+		end
+
+		if originalCFrame then
+			root.CFrame = originalCFrame
+		end
+
+		button.Text = "OFF"
+	end
+end
+
+button.MouseButton1Click:Connect(toggleCollect)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == Enum.KeyCode.G then
+		toggleCollect()
+	end
+end)
